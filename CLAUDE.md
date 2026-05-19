@@ -67,12 +67,8 @@ No environment variables required — the Elfsight widget is a client-side CDN e
     menu-selector.js      — Tab + sidebar + panel logic; Supabase CMS fetch with static fallback
     contact-form.js       — Conditional show/hide logic; Netlify fetch submit; URL param pre-fill
     gallery.js            — Supabase fetch, lightbox (prev/next/Esc/overlay) — no filter logic
-    reviews.js            — Fetches from /.netlify/functions/reviews; renders cards; fallback
     admin.js              — Supabase Auth, gallery CRUD, menu editor, text editor
-    supabase-config.js    — Supabase client init (FILL IN BEFORE GO-LIVE)
-  /netlify/
-    /functions/
-      reviews.js          — Google Places API proxy (Node.js, server-side only)
+    supabase-config.js    — Supabase client init (credentials filled in)
 ```
 
 ---
@@ -141,8 +137,8 @@ Never hardcode hex values in component CSS — always use variables.
 ---
 
 ## Before Go-Live Checklist
-1. **supabase-config.js** — Replace `YOUR_SUPABASE_URL` and `YOUR_SUPABASE_ANON_KEY`
-2. **Supabase** — Create tables: `gallery_images`, `catering_menus`, `editable_texts`; create storage bucket `gallery`; set up RLS (anon read-only for public pages); create admin user at SBWevents@outlook.com
+1. ~~**supabase-config.js**~~ — Done. Credentials filled in.
+2. ~~**Supabase tables**~~ — Done. `gallery_images`, `catering_menus`, `editable_texts` created; storage bucket `gallery` created; RLS set up; admin user at SBWevents@outlook.com created.
 3. **Netlify** — Connect repo; set form notification for form `enquiry` → SBWevents@outlook.com
 4. **Google Reviews** — Paste the Elfsight widget `<script>` tag into the `<!-- PASTE ELFSIGHT GOOGLE REVIEWS SCRIPT HERE -->` comment in `index.html`. Then add any CSS overrides to `css/cards.css` under the Elfsight section to match brand styles.
 5. **Replace stock images** — Client uploads real photos via admin CMS (`/admin/gallery.html`)
@@ -168,11 +164,12 @@ Contact form: `name="enquiry"`, forwards to SBWevents@outlook.com (set in Netlif
 Load before `/js/supabase-config.js` on pages that need it (gallery, catering, admin).
 
 ```js
-// supabase-config.js
-const SUPABASE_URL = 'YOUR_SUPABASE_URL'
-const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY'
-const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+// supabase-config.js — credentials are filled in, window.supabaseClient is set globally
+const SUPABASE_URL = 'https://ryvmutpznmjphyghmqvu.supabase.co'
+const SUPABASE_ANON_KEY = '...'
+window.supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
 ```
+Note: uses `window.supabaseClient` (not `const`) so the client is accessible as a global in all scripts.
 
 ### Supabase Table Schemas
 ```sql
@@ -180,7 +177,7 @@ const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_
 id uuid primary key, url text, alt_text text, category text, sort_order int, created_at timestamptz
 
 -- catering_menus
-id uuid primary key, menu_type text, menu_number int, course text, item_name text, sort_order int
+id uuid primary key, menu_type text, menu_number int, course_name text, item_text text, sort_order int
 
 -- editable_texts
 id uuid primary key, key text unique, value text, updated_at timestamptz
@@ -196,7 +193,7 @@ id uuid primary key, key text unique, value text, updated_at timestamptz
 5. Contact form conditional logic is pure vanilla JS (show/hide on `change` events).
 6. Menu selector: tab buttons + sidebar buttons + right panel, pure class toggling.
 7. Admin pages: `<body class="admin-page">` — `admin.js` checks for Supabase session on every load.
-8. NO Node.js, NO server-side code, NO npm — except the one Netlify Function.
+8. NO Node.js, NO server-side code, NO npm.
 9. All JS is written as IIFEs with `'use strict'`.
 10. No inline styles except truly dynamic JS-set values.
 
@@ -224,7 +221,8 @@ id uuid primary key, key text unique, value text, updated_at timestamptz
 ### Menu Selector (catering.html only)
 - Tabs: `[data-tab]` → `#tab-buffet` / `#tab-table`
 - Sidebar: `[data-panel]` → panel IDs
-- Static HTML fallback — Supabase updates in place if available
+- Static HTML fallback — Supabase fetches `course_name` + `item_text` rows and updates the DOM in place
+- `menu-selector.js` guards with `if (!window.supabaseClient)` before fetching
 
 ### Contact Form (contact.html only)
 - Netlify AJAX submit via `fetch('/')` with URL-encoded body
@@ -249,6 +247,7 @@ id uuid primary key, key text unique, value text, updated_at timestamptz
 - Login at `/admin/index.html` → `supabaseClient.auth.signInWithPassword()`
 - All admin pages check session on load; redirect to login if none
 - `admin.js` detects current page by checking for key element IDs
+- **Menus manager** (`/admin/menus.html`): groups items by `course_name`; supports add/remove items per course, add/remove courses, and a "Seed default menus" button for first-time setup. Save uses delete+reinsert for the full type+number combo.
 
 ---
 
@@ -267,9 +266,6 @@ id uuid primary key, key text unique, value text, updated_at timestamptz
   [headers.values]
     X-Frame-Options = "DENY"
     X-Content-Type-Options = "nosniff"
-
-[functions]
-  directory = "netlify/functions"
 ```
 
 ---
