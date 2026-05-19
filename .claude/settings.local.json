@@ -7,7 +7,15 @@
       "Bash(git -C \"C:\\\\Users\\\\jayde\\\\Desktop\\\\Websites\\\\SBW\" remote -v)",
       "Bash(git init *)",
       "Bash(git remote *)",
-      "Bash(git add *)"
+      "Bash(git add *)",
+      "Bash(git config *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git push *)",
+      "Bash(Remove-Item \"C:\\\\Users\\\\jayde\\\\Desktop\\\\Websites\\\\SBW\\\\js\\\\reviews.js\" -Force)",
+      "Bash(Remove-Item \"C:\\\\Users\\\\jayde\\\\Desktop\\\\Websites\\\\SBW\\\\netlify\\\\functions\\\\reviews.js\" -Force)",
+      "Bash(Remove-Item \"C:\\\\Users\\\\jayde\\\\Desktop\\\\Websites\\\\SBW\\\\netlify\\\\functions\" -Force -ErrorAction SilentlyContinue)",
+      "Bash(Remove-Item \"C:\\\\Users\\\\jayde\\\\Desktop\\\\Websites\\\\SBW\\\\netlify\" -Force -ErrorAction SilentlyContinue)",
+      "Bash(Write-Output \"Removed\")"
     ]
   }
 }

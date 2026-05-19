@@ -20,26 +20,16 @@ SBW Events website for sbwevents.co.uk. Family-run Asian wedding and events busi
 - Hosting: Netlify (static site)
 - Database/CMS: Supabase JS SDK loaded via CDN
 - Forms: Netlify Forms (zero email backend code)
-- ONE Netlify Function: `/netlify/functions/reviews.js` (Google Reviews proxy)
+- Reviews: **Elfsight Google Reviews widget** (CDN embed — no server-side code, no API key needed)
+- No Netlify Functions — the `/netlify/functions/reviews.js` proxy was removed when switching to Elfsight
 
 ## Local Development
 **Files use root-relative paths — they MUST be served from a local server, not opened directly.**
 
-**Preferred: Netlify CLI** (runs functions + static site together):
-```
-netlify dev
-```
-Site at http://localhost:8888. Required to test the Google Reviews function locally.
-
-**Alternative (no functions):** VS Code Live Server extension, or `python -m http.server 8080` → http://localhost:8080
+**VS Code Live Server** or `python -m http.server 8080` → http://localhost:8080
 
 ### Environment Variables
-`.env` file in project root (never commit — in `.gitignore`):
-```
-GOOGLE_PLACE_ID=ChIJBdMluflHiEgR39h85Ecqdv0
-GOOGLE_PLACES_API_KEY=        ← client must supply
-```
-Same vars must be added to Netlify dashboard (Site settings → Environment variables) before go-live.
+No environment variables required — the Elfsight widget is a client-side CDN embed with no API key.
 
 ---
 
@@ -154,7 +144,7 @@ Never hardcode hex values in component CSS — always use variables.
 1. **supabase-config.js** — Replace `YOUR_SUPABASE_URL` and `YOUR_SUPABASE_ANON_KEY`
 2. **Supabase** — Create tables: `gallery_images`, `catering_menus`, `editable_texts`; create storage bucket `gallery`; set up RLS (anon read-only for public pages); create admin user at SBWevents@outlook.com
 3. **Netlify** — Connect repo; set form notification for form `enquiry` → SBWevents@outlook.com
-4. **Google Reviews** — Place ID already set: `ChIJBdMluflHiEgR39h85Ecqdv0`. Client needs to supply `GOOGLE_PLACES_API_KEY` (Google Cloud Console → Places API → Credentials). Add both to Netlify dashboard env vars. Falls back to static placeholder reviews if missing.
+4. **Google Reviews** — Paste the Elfsight widget `<script>` tag into the `<!-- PASTE ELFSIGHT GOOGLE REVIEWS SCRIPT HERE -->` comment in `index.html`. Then add any CSS overrides to `css/cards.css` under the Elfsight section to match brand styles.
 5. **Replace stock images** — Client uploads real photos via admin CMS (`/admin/gallery.html`)
 6. **About page content** — Client supplies real team story and portrait photo
 
