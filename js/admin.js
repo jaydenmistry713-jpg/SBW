@@ -330,11 +330,8 @@
   function initMenus() {
     fetchMenus();
     initMenuTabs();
-
     const saveBtn = document.getElementById('save-menus-btn');
-    if (saveBtn) {
-      saveBtn.addEventListener('click', saveMenus);
-    }
+    if (saveBtn) saveBtn.addEventListener('click', saveMenus);
   }
 
   function initMenuTabs() {
@@ -342,12 +339,8 @@
     tabs.forEach(function (tab) {
       tab.addEventListener('click', function () {
         const targetTab = tab.dataset.tab;
-
-        // Update tab active states
         tabs.forEach(function (t) { t.classList.remove('is-active'); });
         tab.classList.add('is-active');
-
-        // Update content panel active states
         document.querySelectorAll('.menu-manager-content').forEach(function (panel) {
           panel.classList.remove('is-active');
         });
@@ -362,7 +355,6 @@
       const { data, error } = await supabaseClient
         .from('catering_menus')
         .select('*')
-        .order('menu_type', { ascending: true })
         .order('menu_number', { ascending: true })
         .order('sort_order', { ascending: true });
 
@@ -370,118 +362,223 @@
       renderMenus(data || []);
     } catch (err) {
       console.error('Failed to fetch menus:', err);
-      const containers = ['buffet-menus-container', 'table-menus-container'];
-      containers.forEach(function (id) {
+      ['buffet-menus-container', 'table-menus-container'].forEach(function (id) {
         const el = document.getElementById(id);
-        if (el) el.innerHTML = '<p style="color:var(--color-mid);padding:2rem 0;">Failed to load menus.</p>';
+        if (el) el.innerHTML = '<p style="color:var(--color-mid);padding:2rem 0;">Failed to load. Ensure the catering_menus table exists in Supabase.</p>';
       });
     }
   }
 
-  function renderMenus(items) {
-    // Group by menu_type then menu_number
+  function renderMenus(rows) {
     const grouped = {};
-    items.forEach(function (item) {
-      const type = item.menu_type || 'buffet';
-      const num = item.menu_number || 1;
-      if (!grouped[type]) grouped[type] = {};
+    rows.forEach(function (row) {
+      const type = row.menu_type || 'buffet';
+      const num  = String(row.menu_number || 1);
+      if (!grouped[type])      grouped[type] = {};
       if (!grouped[type][num]) grouped[type][num] = [];
-      grouped[type][num].push(item);
+      grouped[type][num].push(row);
     });
 
-    // Render buffet
     const buffetContainer = document.getElementById('buffet-menus-container');
-    if (buffetContainer) {
-      buffetContainer.innerHTML = renderMenuGroup(grouped['buffet'] || {}, 'buffet');
-    }
+    const tableContainer  = document.getElementById('table-menus-container');
+    if (buffetContainer) buffetContainer.innerHTML = buildMenuGroupHTML(grouped['buffet'] || {}, 'buffet');
+    if (tableContainer)  tableContainer.innerHTML  = buildMenuGroupHTML(grouped['table']  || {}, 'table');
 
-    // Render table
-    const tableContainer = document.getElementById('table-menus-container');
-    if (tableContainer) {
-      tableContainer.innerHTML = renderMenuGroup(grouped['table'] || {}, 'table');
-    }
+    attachMenuListeners();
   }
 
-  function renderMenuGroup(group, type) {
-    const menuNums = Object.keys(group).sort(function (a, b) { return a - b; });
+  function buildMenuGroupHTML(group, type) {
+    const nums = Object.keys(group).sort(function (a, b) { return Number(a) - Number(b); });
 
-    if (!menuNums.length) {
-      return '<p style="color:var(--color-mid);padding:2rem 0;">No menus found for this category.</p>';
+    if (!nums.length) {
+      return '<div class="menu-empty-state">'
+        + '<p>No menu data yet.</p>'
+        + '<button class="btn btn--green menu-seed-btn" data-type="' + type + '">Seed default menus</button>'
+        + '</div>';
     }
 
-    return menuNums.map(function (num) {
-      const items = group[num];
-      const menuLabel = type === 'buffet' ? 'Buffet Menu ' : 'Table Service Menu ';
+    return nums.map(function (num) {
+      const rows  = group[num];
+      const label = type === 'buffet' ? 'Buffet Menu ' : 'Table Service Menu ';
 
-      const rows = items.map(function (item) {
-        return `
-          <div class="menu-item-row" data-id="${item.id}">
-            <input
-              type="text"
-              class="form-control menu-item-name-input"
-              value="${escapeHtml(item.item_name || '')}"
-              placeholder="Menu item name"
-              data-id="${item.id}"
-            >
-            <button class="btn btn--delete menu-item-delete-btn" data-id="${item.id}">Remove</button>
-          </div>
-        `;
+      // Group by course_name, preserving row order
+      const courseMap   = {};
+      const courseOrder = [];
+      rows.forEach(function (row) {
+        const cn = row.course_name || 'Menu Items';
+        if (!courseMap[cn]) { courseMap[cn] = []; courseOrder.push(cn); }
+        courseMap[cn].push(row);
+      });
+
+      const coursesHTML = courseOrder.map(function (cname) {
+        const itemsHTML = courseMap[cname].map(function (row) {
+          return '<div class="menu-item-row" data-id="' + escapeHtml(row.id) + '">'
+            + '<input type="text" class="form-control menu-item-input" value="' + escapeHtml(row.item_text || '') + '" placeholder="Item name">'
+            + '<button class="menu-item-delete-btn" title="Remove item">&#x2715;</button>'
+            + '</div>';
+        }).join('');
+
+        return '<div class="menu-course-block" data-type="' + type + '" data-num="' + num + '">'
+          + '<div class="menu-course-block__header">'
+          + '<input type="text" class="form-control menu-course-name-input" value="' + escapeHtml(cname) + '" placeholder="Course name">'
+          + '<button class="menu-course-delete-btn">Delete course</button>'
+          + '</div>'
+          + '<div class="menu-course-block__items">' + itemsHTML + '</div>'
+          + '<button class="menu-add-item-btn">+ Add item</button>'
+          + '</div>';
       }).join('');
 
-      return `
-        <div class="menu-section">
-          <h3 class="menu-section__title">${escapeHtml(menuLabel + num)}</h3>
-          <div class="menu-section__items" id="menu-section-${type}-${num}">
-            ${rows}
-          </div>
-        </div>
-      `;
+      return '<div class="menu-section" data-type="' + type + '" data-num="' + num + '">'
+        + '<h3 class="menu-section__title">' + escapeHtml(label + num) + '</h3>'
+        + coursesHTML
+        + '<button class="menu-add-course-btn" data-type="' + type + '" data-num="' + num + '">+ Add course</button>'
+        + '</div>';
     }).join('');
+  }
+
+  function attachMenuListeners() {
+    document.querySelectorAll('.menu-seed-btn').forEach(function (btn) {
+      btn.addEventListener('click', function () { seedDefaultMenus(btn.dataset.type); });
+    });
+    document.querySelectorAll('.menu-add-item-btn').forEach(function (btn) {
+      btn.addEventListener('click', function () { addItemToBlock(btn.closest('.menu-course-block')); });
+    });
+    document.querySelectorAll('.menu-add-course-btn').forEach(function (btn) {
+      btn.addEventListener('click', function () { addCourseToSection(btn.closest('.menu-section'), btn.dataset.type, btn.dataset.num); });
+    });
+    document.querySelectorAll('.menu-course-delete-btn').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        if (confirm('Delete this course and all its items?')) btn.closest('.menu-course-block').remove();
+      });
+    });
+    document.querySelectorAll('.menu-item-delete-btn').forEach(function (btn) {
+      btn.addEventListener('click', function () { btn.closest('.menu-item-row').remove(); });
+    });
+  }
+
+  function addItemToBlock(courseBlock) {
+    const items = courseBlock.querySelector('.menu-course-block__items');
+    const row = document.createElement('div');
+    row.className = 'menu-item-row';
+    row.innerHTML = '<input type="text" class="form-control menu-item-input" value="" placeholder="Item name">'
+      + '<button class="menu-item-delete-btn" title="Remove item">&#x2715;</button>';
+    items.appendChild(row);
+    row.querySelector('input').focus();
+    row.querySelector('.menu-item-delete-btn').addEventListener('click', function () { row.remove(); });
+  }
+
+  function addCourseToSection(section, type, num) {
+    const addCourseBtn = section.querySelector('.menu-add-course-btn');
+    const block = document.createElement('div');
+    block.className = 'menu-course-block';
+    block.dataset.type = type;
+    block.dataset.num  = num;
+    block.innerHTML =
+      '<div class="menu-course-block__header">'
+      + '<input type="text" class="form-control menu-course-name-input" value="" placeholder="Course name (e.g. Starters)">'
+      + '<button class="menu-course-delete-btn">Delete course</button>'
+      + '</div>'
+      + '<div class="menu-course-block__items"></div>'
+      + '<button class="menu-add-item-btn">+ Add item</button>';
+    addCourseBtn.before(block);
+    block.querySelector('.menu-course-name-input').focus();
+    block.querySelector('.menu-add-item-btn').addEventListener('click', function () { addItemToBlock(block); });
+    block.querySelector('.menu-course-delete-btn').addEventListener('click', function () {
+      if (confirm('Delete this course and all its items?')) block.remove();
+    });
   }
 
   async function saveMenus() {
     const saveBtn = document.getElementById('save-menus-btn');
-    if (saveBtn) {
-      saveBtn.disabled = true;
-      saveBtn.textContent = 'Saving…';
-    }
+    if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = 'Saving…'; }
 
     try {
-      const rows = document.querySelectorAll('.menu-item-row');
-      const updates = [];
+      const newRows = [];
+      let order = 0;
 
-      rows.forEach(function (row) {
-        const id = row.dataset.id;
-        const nameInput = row.querySelector('.menu-item-name-input');
-        if (id && nameInput) {
-          updates.push({ id: id, item_name: nameInput.value.trim() });
-        }
+      document.querySelectorAll('.menu-section').forEach(function (section) {
+        const type = section.dataset.type;
+        const num  = parseInt(section.dataset.num, 10);
+        section.querySelectorAll('.menu-course-block').forEach(function (block) {
+          const courseName = (block.querySelector('.menu-course-name-input').value || '').trim();
+          if (!courseName) return;
+          block.querySelectorAll('.menu-item-row').forEach(function (row) {
+            const itemText = (row.querySelector('.menu-item-input').value || '').trim();
+            if (!itemText) return;
+            newRows.push({ menu_type: type, menu_number: num, course_name: courseName, item_text: itemText, sort_order: order++ });
+          });
+        });
       });
 
-      // Perform updates in parallel
-      const promises = updates.map(function (update) {
-        return supabaseClient
-          .from('catering_menus')
-          .update({ item_name: update.item_name })
-          .eq('id', update.id);
-      });
+      // Collect which type+num combos are in the DOM
+      const combos = {};
+      newRows.forEach(function (r) { combos[r.menu_type + '_' + r.menu_number] = { type: r.menu_type, num: r.menu_number }; });
 
-      const results = await Promise.all(promises);
-      const errors = results.filter(function (r) { return r.error; });
-
-      if (errors.length) {
-        throw new Error(errors[0].error.message);
+      // Delete existing rows for each combo then reinsert
+      for (const key of Object.keys(combos)) {
+        const { type, num } = combos[key];
+        const { error } = await supabaseClient.from('catering_menus').delete().eq('menu_type', type).eq('menu_number', num);
+        if (error) throw error;
       }
 
-      showAlert('success', 'All menu changes saved successfully.');
+      if (newRows.length) {
+        const { error } = await supabaseClient.from('catering_menus').insert(newRows);
+        if (error) throw error;
+      }
+
+      showAlert('success', 'Menus saved successfully.');
+      await fetchMenus();
     } catch (err) {
       console.error('Failed to save menus:', err);
-      showAlert('error', 'Failed to save changes: ' + (err.message || 'Unknown error'));
+      showAlert('error', 'Failed to save: ' + (err.message || 'Unknown error'));
     } finally {
-      if (saveBtn) {
-        saveBtn.disabled = false;
-        saveBtn.textContent = 'Save All Changes';
+      if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'Save All Changes'; }
+    }
+  }
+
+  async function seedDefaultMenus(type) {
+    const defaults = {
+      buffet: {
+        1: [{ course: 'Menu Items', items: ['Chicken Pilau','Lamb Korma','Naan','Chapli Kebab','Mini Sliders','Creamy Pasta','Salad, Raita & Red Chilli Sauce'] }],
+        2: [{ course: 'Menu Items', items: ['Achari Aloo','Seekh Kabab','Chicken Jalfrezi','Lamb Pilau','Tarka Daal','Naan','Salad, Raita & Red Chilli Sauce'] }]
+      },
+      table: {
+        1: [
+          { course: 'Appetiser',  items: ['Channa Chaat','Mixed Fruit Juices'] },
+          { course: 'Starters',   items: ['Peri Peri Chicken Steaks','Seekh Kebab','Achari Aloo'] },
+          { course: 'Mains',      items: ['Chicken Pilau','Lamb Korma','Tarka Daal'] },
+          { course: 'Dessert',    items: ['Gulab Jaman & Ice Cream'] }
+        ],
+        2: [
+          { course: 'Appetisers',   items: ['Samosa Chaat','Mini Burgers','Mojito','Strawberry Daiquiri','Mango Juice'] },
+          { course: 'Starters',     items: ['Peri Peri Chicken Steaks','Seekh Kabab','Lahore Fish Masala','Achari Aloo'] },
+          { course: 'Mains',        items: ['Lamb Pilau','Lamb Korma','Chicken Karahi','Aloo Palak'] },
+          { course: 'Dessert',      items: ['Trio Dessert'] },
+          { course: 'Table Drinks', items: ['Irn Bru','Barrs Cola','Water'] }
+        ]
       }
+    };
+
+    const menus = defaults[type];
+    if (!menus) return;
+
+    const rows = [];
+    let order = 0;
+    Object.keys(menus).forEach(function (num) {
+      menus[num].forEach(function (c) {
+        c.items.forEach(function (item) {
+          rows.push({ menu_type: type, menu_number: parseInt(num), course_name: c.course, item_text: item, sort_order: order++ });
+        });
+      });
+    });
+
+    try {
+      const { error } = await supabaseClient.from('catering_menus').insert(rows);
+      if (error) throw error;
+      showAlert('success', 'Default ' + (type === 'buffet' ? 'buffet' : 'table service') + ' menus seeded.');
+      await fetchMenus();
+    } catch (err) {
+      showAlert('error', 'Failed to seed menus: ' + err.message);
     }
   }
 

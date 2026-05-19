@@ -236,10 +236,9 @@
                        item_text (text)
   ============================================================ */
   function fetchFromSupabase() {
-    // Guard: supabaseClient must be defined by supabase-config.js
-    if (typeof supabaseClient === 'undefined' || !supabaseClient) return;
+    if (!window.supabaseClient) return;
 
-    supabaseClient
+    window.supabaseClient
       .from('catering_menus')
       .select('menu_type, menu_number, course_name, sort_order, item_text')
       .order('menu_type')
