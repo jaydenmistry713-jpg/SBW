@@ -606,19 +606,17 @@
   // INIT
   // ---------------------------------------------------------------------------
   async function init() {
-    // DEV MODE — re-enable before go-live
-    // if (!window.supabaseClient) {
-    //   console.warn('Supabase client not initialised');
-    //   return;
-    // }
+    if (!window.supabaseClient) {
+      console.warn('Supabase client not initialised');
+      return;
+    }
 
-    // DEV MODE — auth disabled for UI preview; uncomment checkSession() before go-live
-    // const session = await checkSession();
+    const session = await checkSession();
 
     // Route to appropriate page handler
     if (document.getElementById('login-form')) {
       initLogin();
-    } else /* if (session) */ {
+    } else if (session) {
       initSignOut();
 
       if (document.getElementById('admin-gallery-grid')) {
