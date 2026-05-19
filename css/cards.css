@@ -114,7 +114,9 @@
 
 /* === Review Cards === */
 .reviews-section {
-  background-color: var(--color-cream);
+  background-color: var(--color-cream-dark);
+  background-image: url("data:image/svg+xml,%3Csvg width='64' height='64' viewBox='0 0 64 64' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M32 3L61 32L32 61L3 32Z' fill='none' stroke='%23C9A84C' stroke-width='0.75' stroke-opacity='0.22'/%3E%3Cpath d='M32 15L49 32L32 49L15 32Z' fill='none' stroke='%23C9A84C' stroke-width='0.5' stroke-opacity='0.16'/%3E%3C/svg%3E");
+  background-size: 64px 64px;
 }
 
 .reviews-grid {
@@ -124,11 +126,12 @@
 }
 
 .review-card {
-  background-color: var(--color-white);
+  background: linear-gradient(145deg, var(--color-white) 0%, var(--color-cream) 100%);
   border-radius: var(--radius-md);
   padding: var(--space-6);
   box-shadow: var(--shadow-sm);
   border: 1px solid var(--color-border);
+  border-top-color: rgba(201, 168, 76, 0.35);
   transition: box-shadow var(--transition-base);
 }
 
@@ -292,9 +295,10 @@
 
 .value-card {
   padding: var(--space-6);
-  background-color: var(--color-white);
+  background: linear-gradient(160deg, var(--color-white) 0%, var(--color-cream) 100%);
   border-radius: var(--radius-md);
   border: 1px solid var(--color-border);
+  border-top: 2px solid rgba(201, 168, 76, 0.45);
   transition: box-shadow var(--transition-base), transform var(--transition-base);
 }
 

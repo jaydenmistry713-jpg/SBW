@@ -87,6 +87,28 @@ Same vars must be added to Netlify dashboard (Site settings → Environment vari
 
 ---
 
+## Section Background System
+
+### Utility classes
+| Class | Background |
+|---|---|
+| `.section` (default) | Plain white |
+| `.section--warm` | White + faint gold radial glow at top (5% opacity) — used on key white-bg content sections |
+| `.section--cream` | `--color-cream` + repeating 64px concentric diamond SVG pattern (gold, 15–20% stroke-opacity) |
+| `.section--dark` | `--color-dark` |
+| `.section--green` | `--color-green` |
+
+### Specific section treatments
+- **`.intro-strip`** — `--color-cream` + centred radial gold gradient + large 480px diamond ornament watermark pseudo-element (opacity 0.06). `.intro-strip__inner` has `z-index: 1` to sit above the ornament.
+- **`.reviews-section`** — `--color-cream-dark` + same diamond SVG pattern (slightly higher opacity).
+- **`.review-card`** — `linear-gradient(145deg, white → cream)` + gold top border tint.
+- **`.value-card`** — `linear-gradient(160deg, white → cream)` + 2px gold top border (45% opacity).
+
+### SVG pattern note
+The diamond tile pattern is a pure CSS data URI — no external image files. Hex `#C9A84C` is hardcoded inside the data URI (CSS variables cannot be used there).
+
+---
+
 ## Brand Colours
 ```css
 :root {

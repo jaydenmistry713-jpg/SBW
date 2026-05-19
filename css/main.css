@@ -140,6 +140,15 @@ input, textarea, select {
 
 .section--cream {
   background-color: var(--color-cream);
+  background-image: url("data:image/svg+xml,%3Csvg width='64' height='64' viewBox='0 0 64 64' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M32 3L61 32L32 61L3 32Z' fill='none' stroke='%23C9A84C' stroke-width='0.75' stroke-opacity='0.2'/%3E%3Cpath d='M32 15L49 32L32 49L15 32Z' fill='none' stroke='%23C9A84C' stroke-width='0.5' stroke-opacity='0.15'/%3E%3C/svg%3E");
+  background-size: 64px 64px;
+}
+
+/* Subtle warm gold radial wash for plain white content sections */
+.section--warm {
+  background:
+    radial-gradient(ellipse 80% 50% at 50% 0%, rgba(201, 168, 76, 0.05) 0%, transparent 70%),
+    var(--color-white);
 }
 
 .section--dark {
@@ -425,7 +434,27 @@ h4 { font-size: var(--text-xl); font-weight: 500; }
 /* === Intro Strip === */
 .intro-strip {
   padding: var(--space-16) 0;
-  background-color: var(--color-white);
+  background:
+    radial-gradient(ellipse 70% 90% at 50% 50%, rgba(201, 168, 76, 0.07) 0%, transparent 70%),
+    var(--color-cream);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Large concentric diamond ornament watermark — South Asian geometric motif */
+.intro-strip::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: min(480px, 90vw);
+  aspect-ratio: 1;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 280 280' xmlns='http://www.w3.org/2000/svg' fill='none' stroke='%23C9A84C'%3E%3Cpath d='M140 6L274 140L140 274L6 140Z' stroke-width='1.5' stroke-opacity='.8'/%3E%3Cpath d='M140 36L244 140L140 244L36 140Z' stroke-width='1' stroke-opacity='.6'/%3E%3Cpath d='M140 66L214 140L140 214L66 140Z' stroke-width='.8' stroke-opacity='.5'/%3E%3Cpath d='M140 96L184 140L140 184L96 140Z' stroke-width='.7' stroke-opacity='.5'/%3E%3Ccircle cx='140' cy='140' r='14' stroke-width='.8' stroke-opacity='.5'/%3E%3Cline x1='140' y1='6' x2='140' y2='274' stroke-width='.5' stroke-opacity='.3'/%3E%3Cline x1='6' y1='140' x2='274' y2='140' stroke-width='.5' stroke-opacity='.3'/%3E%3Ccircle cx='140' cy='6' r='3.5' fill='%23C9A84C' fill-opacity='.6'/%3E%3Ccircle cx='274' cy='140' r='3.5' fill='%23C9A84C' fill-opacity='.6'/%3E%3Ccircle cx='140' cy='274' r='3.5' fill='%23C9A84C' fill-opacity='.6'/%3E%3Ccircle cx='6' cy='140' r='3.5' fill='%23C9A84C' fill-opacity='.6'/%3E%3C/svg%3E");
+  background-size: contain;
+  background-repeat: no-repeat;
+  opacity: 0.06;
+  pointer-events: none;
 }
 
 .intro-strip__inner {
@@ -435,6 +464,8 @@ h4 { font-size: var(--text-xl); font-weight: 500; }
   text-align: center;
   max-width: 780px;
   margin: 0 auto;
+  position: relative;
+  z-index: 1;
 }
 
 .intro-strip__text h2 {
