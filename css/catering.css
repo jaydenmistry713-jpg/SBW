@@ -1,0 +1,356 @@
+/* === catering.css — Catering page styles === */
+
+/* ============================================================
+   Intro Section
+============================================================ */
+.catering-intro {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-12);
+  align-items: center;
+}
+
+.catering-intro__content .section-label {
+  margin-bottom: var(--space-3);
+}
+
+.catering-intro__content h2 {
+  margin-bottom: var(--space-5);
+}
+
+.catering-intro__content p {
+  color: var(--color-mid);
+  line-height: 1.8;
+  margin-bottom: var(--space-6);
+}
+
+.catering-intro__img-wrap {
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  position: relative;
+}
+
+.catering-intro__img-wrap::after {
+  content: '';
+  position: absolute;
+  bottom: -12px;
+  right: -12px;
+  width: 55%;
+  height: 55%;
+  border: 3px solid var(--color-gold);
+  border-radius: var(--radius-lg);
+  z-index: -1;
+}
+
+.catering-intro__img {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  display: block;
+}
+
+@media (min-width: 1024px) {
+  .catering-intro {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* ============================================================
+   Menu Selector UI
+============================================================ */
+
+.menu-selector {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-6);
+}
+
+/* === Tabs === */
+.menu-tabs {
+  display: flex;
+  gap: 0;
+  border-bottom: 2px solid var(--color-border);
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.menu-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.menu-tab-btn {
+  padding: var(--space-4) var(--space-6);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-mid);
+  border: none;
+  background: none;
+  cursor: pointer;
+  white-space: nowrap;
+  border-bottom: 3px solid transparent;
+  margin-bottom: -2px;
+  transition: all var(--transition-base);
+  flex-shrink: 0;
+}
+
+.menu-tab-btn:hover {
+  color: var(--color-green);
+}
+
+.menu-tab-btn.is-active {
+  color: var(--color-green);
+  border-bottom-color: var(--color-gold);
+}
+
+/* === Tab Content === */
+.menu-tab-content {
+  display: none;
+}
+
+.menu-tab-content.is-active {
+  display: block;
+}
+
+/* === Selector Layout === */
+.menu-selector__layout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-6);
+  align-items: start;
+}
+
+/* === Sidebar === */
+.menu-sidebar {
+  display: flex;
+  flex-direction: row;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.menu-sidebar-btn {
+  flex: 1 1 calc(50% - var(--space-3));
+  padding: var(--space-4) var(--space-5);
+  background-color: var(--color-white);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-mid);
+  cursor: pointer;
+  text-align: left;
+  transition: all var(--transition-base);
+  position: relative;
+}
+
+.menu-sidebar-btn::before {
+  content: '';
+  display: block;
+  width: 3px;
+  height: 0;
+  background-color: var(--color-gold);
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  border-radius: 0 2px 2px 0;
+  transition: height var(--transition-base);
+}
+
+.menu-sidebar-btn:hover {
+  border-color: var(--color-gold);
+  color: var(--color-dark);
+}
+
+.menu-sidebar-btn.is-active {
+  border-color: var(--color-green);
+  background-color: var(--color-green);
+  color: var(--color-white);
+}
+
+.menu-sidebar-btn.is-active::before {
+  height: 60%;
+  background-color: var(--color-gold);
+}
+
+.menu-sidebar-btn__number {
+  display: block;
+  font-size: var(--text-xs);
+  font-weight: 400;
+  opacity: 0.7;
+  margin-bottom: var(--space-1);
+}
+
+.menu-sidebar-btn__title {
+  display: block;
+  font-size: var(--text-base);
+}
+
+/* === Menu Panel === */
+.menu-panel {
+  display: none;
+  background-color: var(--color-white);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+
+.menu-panel.is-active {
+  display: block;
+}
+
+.menu-panel__header {
+  background: linear-gradient(135deg, var(--color-green) 0%, var(--color-green-dark) 100%);
+  padding: var(--space-6) var(--space-8);
+  text-align: center;
+}
+
+.menu-panel__header h3 {
+  color: var(--color-white);
+  font-size: var(--text-2xl);
+  margin-bottom: var(--space-2);
+}
+
+.menu-panel__header p {
+  color: rgba(255, 255, 255, 0.75);
+  font-size: var(--text-sm);
+}
+
+.menu-panel__header .gold-divider {
+  margin: var(--space-4) auto 0;
+}
+
+.menu-panel__body {
+  padding: var(--space-8);
+}
+
+/* === Menu Course Section === */
+.menu-course {
+  margin-bottom: var(--space-8);
+}
+
+.menu-course:last-child {
+  margin-bottom: 0;
+}
+
+.menu-course__title {
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--color-gold-dark);
+  margin-bottom: var(--space-4);
+  padding-bottom: var(--space-3);
+  border-bottom: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.menu-course__title::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background-color: var(--color-border);
+  display: none;
+}
+
+.menu-course__items {
+  list-style: none;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-2);
+}
+
+.menu-course__items li {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+  padding: var(--space-2) 0;
+  color: var(--color-mid);
+  font-size: var(--text-sm);
+  border-bottom: 1px dotted var(--color-border);
+}
+
+.menu-course__items li:last-child {
+  border-bottom: none;
+}
+
+.menu-course__items li::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  background-color: var(--color-gold);
+  border-radius: var(--radius-full);
+  flex-shrink: 0;
+  margin-top: 0.35em;
+}
+
+/* Halal badge */
+.halal-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  background-color: var(--color-green);
+  color: var(--color-white);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-full);
+  margin-bottom: var(--space-6);
+}
+
+/* Dietary note */
+.dietary-note {
+  background-color: var(--color-cream);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-4) var(--space-5);
+  font-size: var(--text-sm);
+  color: var(--color-mid);
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  margin-top: var(--space-6);
+}
+
+.dietary-note__icon {
+  color: var(--color-gold);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+/* === Responsive === */
+@media (min-width: 768px) {
+  .menu-selector__layout {
+    grid-template-columns: 220px 1fr;
+    gap: var(--space-8);
+  }
+
+  .menu-sidebar {
+    flex-direction: column;
+  }
+
+  .menu-sidebar-btn {
+    flex: none;
+    width: 100%;
+  }
+}
+
+@media (min-width: 1024px) {
+  .menu-selector__layout {
+    grid-template-columns: 260px 1fr;
+    gap: var(--space-10);
+  }
+
+  .menu-course__items {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

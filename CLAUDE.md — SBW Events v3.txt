@@ -1,0 +1,189 @@
+# CLAUDE.md — SBW Events Website
+
+## Project Overview
+You are building the SBW Events website for sbwevents.co.uk. This is a premium events business website for a family-run team based in Scotland. The site must feel visually luxurious, elegant, and trust-building. Read the PRD fully before writing any code.
+
+## Tech Stack — STRICTLY HTML, CSS, VANILLA JAVASCRIPT ONLY
+- No frameworks (no React, Vue, Next.js, Angular, Svelte)
+- No CSS frameworks (no Tailwind, Bootstrap)
+- No jQuery
+- No build tools, no bundlers — files must work as plain static files
+- Plain HTML5, CSS3, vanilla JavaScript (ES6+)
+- Hosting: Netlify (static site deployment)
+- Database/CMS backend: Supabase (JS SDK loaded via CDN)
+- Forms: Netlify Forms (no backend email logic whatsoever)
+- NO Node.js, NO Express, NO server-side code of any kind
+
+## File Structure
+```
+/
+  index.html
+  about.html
+  services.html
+  gallery.html
+  contact.html
+  netlify.toml
+  /services/
+    event-planning.html
+    event-management.html
+    bespoke-decor.html
+    catering.html
+  /admin/
+    index.html          (Supabase Auth login)
+    gallery.html        (gallery manager)
+    menus.html          (menu manager)
+    texts.html          (text field manager)
+  /css/
+    main.css            (global styles, CSS custom properties, typography)
+    nav.css
+    hero.css
+    cards.css
+    catering.css
+    contact-form.css
+    gallery.css
+    admin.css
+  /js/
+    main.js             (global: nav, mobile menu, scroll behaviour)
+    hero-slider.js      (homepage image slider)
+    menu-selector.js    (catering page tab/sidebar/panel logic)
+    contact-form.js     (conditional form show/hide logic)
+    gallery.js          (lightbox, category filter, Supabase image fetch)
+    reviews.js          (Google Places API fetch + render)
+    admin.js            (Supabase Auth + CMS CRUD operations)
+    supabase-config.js  (Supabase client init — reads from config or inline)
+  /images/
+    /hero/
+    /services/
+    /gallery/
+    /team/
+```
+
+## Brand Colours (define as CSS custom properties in main.css)
+```css
+:root {
+  --color-green: #2D5016;     /* adjust to match logo */
+  --color-gold: #C9A84C;      /* adjust to match logo */
+  --color-cream: #FAF7F2;
+  --color-dark: #1A1A1A;
+  --color-white: #FFFFFF;
+  --color-mid: #555555;
+  --color-border: #E8E0D5;
+}
+```
+
+## Typography
+- Headings: Playfair Display (Google Fonts CDN)
+- Body: Inter (Google Fonts CDN)
+- Load both in the <head> of every HTML page via Google Fonts link tag
+
+## Netlify Forms — Required on Every Form
+Every <form> element must include:
+- The attribute: data-netlify="true"
+- The attribute: name="[form-name]"  (e.g. name="enquiry")
+- A hidden input: <input type="hidden" name="form-name" value="[form-name]">
+- Netlify handles all email notification routing — do NOT write any email sending code
+
+Contact form specifically:
+- name="enquiry" data-netlify="true"
+- Hidden input value="enquiry"
+- Netlify email notification in Netlify dashboard will be set to forward to SBWevents@outlook.com
+
+## Supabase Integration
+- Load Supabase JS SDK via CDN in relevant pages:
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+- Initialise client in supabase-config.js:
+  const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+- SUPABASE_URL and SUPABASE_ANON_KEY defined as constants in supabase-config.js
+- Admin panel uses Supabase Auth (email/password) — signInWithPassword()
+- Gallery images stored in Supabase Storage bucket "gallery"
+- CMS data in tables: gallery_images, catering_menus, editable_texts
+- Public pages fetch CMS data on load via Supabase JS client (anon key, read-only RLS)
+
+## Key Rules
+1. Mobile-first always. Write CSS for 375px first, then use min-width media queries.
+2. All images use <img> with proper alt text and loading="lazy".
+3. No placeholder lorem ipsum — use real content from the PRD.
+4. CSS custom properties (variables) for all colours — no hardcoded hex values in component CSS.
+5. Contact form conditional logic is pure vanilla JS (show/hide sections on change events).
+6. Catering menu selector: top tabs + left sidebar + right panel, pure JS class toggling.
+7. CMS admin protected by Supabase Auth — redirect to login if no active session.
+8. NO Node.js, NO server-side code, NO npm, NO package.json.
+
+## Component Notes
+
+### Navbar (duplicated in each HTML file or loaded via JS fetch/include)
+- Top bar: phone, email(s), social icons
+- Main nav: Logo | Home | About | Services ▾ | Gallery | Contact
+- Services: CSS dropdown on hover (desktop), JS accordion toggle (mobile)
+- Sticky on scroll — JS adds .scrolled class to header for background/shadow change
+
+### Hero Slider (index.html + hero-slider.js)
+- Full viewport height div cycling 3–5 background images every 5s
+- CSS transition for fade effect
+- Tagline: "Your Vision. Our Creation." centred overlay, subtle CSS fade-in on load
+- CTA: "Enquire Now" → contact.html
+
+### Contact Form (contact.html + contact-form.js)
+- All conditional logic via vanilla JS addEventListener('change')
+- Event type select → show/hide relevant sections
+- Service checkboxes → each reveals sub-field section
+- Submit handled natively by Netlify Forms — no JS fetch needed for submission
+- Post-submit: Netlify redirects to success page or shows inline thank-you (use netlify success redirect or JS on form submit event to show thank-you message)
+
+### Menu Selector (catering.html + menu-selector.js)
+- Tab buttons at top: Buffet Menu | Table Service
+- Left sidebar: Menu 1, Menu 2 per active tab
+- Right panel: renders course sections from JS data object
+- All menu data hardcoded as JS object in menu-selector.js (also editable via Supabase CMS)
+- Pure CSS class toggling, no libraries
+
+### Gallery (gallery.html + gallery.js)
+- On load: fetch images from Supabase gallery_images table
+- CSS grid layout, category filter buttons (All / Décor / Catering / Events)
+- Custom pure JS lightbox — overlay, image, prev/next arrows, close on overlay click or Escape
+
+### Google Reviews (index.html + reviews.js)
+- Client-side fetch to Google Places API (https://maps.googleapis.com/maps/api/place/details/json)
+- Note: requires a CORS proxy or Netlify Function if direct browser fetch is blocked
+- If blocked: create a simple Netlify Function (/_netlify/functions/reviews.js) to proxy the request — this is the ONE exception where a serverless function is acceptable
+- Render: star rating, reviewer name, truncated review text with expand toggle, date
+- Fallback: static "See our reviews on Google" link card
+
+## CMS Admin Dashboard (/admin/)
+- /admin/index.html: Supabase Auth sign-in form
+- On successful auth: redirect to /admin/gallery.html
+- Each admin page checks for active Supabase session on load, redirects to login if none
+- Gallery Manager: fetch from gallery_images, display grid, upload to Supabase Storage, update DB, delete
+- Menu Manager: fetch from catering_menus, group by menu_type + menu_number, edit inline, save
+- Text Manager: fetch from editable_texts, edit whitelisted fields, save
+- All CRUD via Supabase JS SDK
+
+## netlify.toml
+Create a netlify.toml in the project root:
+```toml
+[build]
+  publish = "/"
+
+[[redirects]]
+  from = "/admin/*"
+  to = "/admin/index.html"
+  status = 200
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+```
+
+## DO NOT
+- Do not use React, Vue, Next.js, Svelte, or any JS framework
+- Do not use Tailwind, Bootstrap, or any CSS framework
+- Do not use jQuery or any JS library except Supabase SDK (CDN only)
+- Do not use Node.js, Express, or any server-side runtime
+- Do not write any email sending code — Netlify Forms handles all of this
+- Do not use WordPress, Contentful, Sanity, or any third-party CMS other than Supabase
+- Do not use inline styles except for truly dynamic JS-set values
+- Do not embed YouTube or Vimeo — use native <video> with hosted mp4
+- Do not add heavy animations — subtle CSS transitions and fades only
+- Do not use npm, yarn, or any package manager — no package.json

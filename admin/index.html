@@ -1,0 +1,47 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Login | SBW Events CMS</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/main.css">
+  <link rel="stylesheet" href="/css/admin.css">
+</head>
+<body class="admin-page">
+
+  <div class="admin-login-page">
+    <div class="admin-login-card">
+      <div class="admin-login-card__logo">
+        <span class="logo-text">SBW <span class="logo-accent">Events</span></span>
+      </div>
+      <h1>CMS Login</h1>
+      <p class="subtitle">Sign in to manage your website content.</p>
+
+      <div class="login-error" id="login-error" style="display:none;"></div>
+
+      <form id="login-form" novalidate>
+        <div class="form-group">
+          <label for="login-email">Email Address</label>
+          <input type="email" id="login-email" class="form-control" required autocomplete="email">
+        </div>
+        <div class="form-group">
+          <label for="login-password">Password</label>
+          <input type="password" id="login-password" class="form-control" required autocomplete="current-password">
+        </div>
+        <button type="submit" class="btn btn--green" style="width:100%">Sign In</button>
+      </form>
+
+      <p style="text-align:center;margin-top:1rem;font-size:0.875rem;color:#888">
+        Back to site: <a href="/">sbwevents.co.uk</a>
+      </p>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="/js/supabase-config.js"></script>
+  <script src="/js/admin.js"></script>
+</body>
+</html>
