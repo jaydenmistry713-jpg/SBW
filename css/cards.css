@@ -373,3 +373,53 @@
     grid-template-columns: repeat(4, 1fr);
   }
 }
+
+/* === Elfsight Google Reviews widget overrides === */
+/* Strip Elfsight's own wrapper padding/background */
+.eapps-google-reviews {
+  padding: 0 !important;
+  background: transparent !important;
+}
+
+/* Match card style to site review cards */
+.eapps-google-reviews-list-item {
+  background: linear-gradient(145deg, var(--color-white) 0%, var(--color-cream) 100%) !important;
+  border: 1px solid var(--color-border) !important;
+  border-top: 2px solid rgba(201, 168, 76, 0.35) !important;
+  border-radius: var(--radius-md) !important;
+  box-shadow: var(--shadow-sm) !important;
+}
+
+/* Inherit site font */
+.eapps-google-reviews,
+.eapps-google-reviews-list-item-review,
+.eapps-google-reviews-list-item-name {
+  font-family: var(--font-body) !important;
+}
+
+/* Reviewer name */
+.eapps-google-reviews-list-item-name {
+  color: var(--color-dark) !important;
+  font-weight: 600 !important;
+  font-size: var(--text-sm) !important;
+}
+
+/* Review body text */
+.eapps-google-reviews-list-item-review {
+  color: var(--color-mid) !important;
+  font-size: var(--text-sm) !important;
+  line-height: 1.7 !important;
+}
+
+/* Date */
+.eapps-google-reviews-list-item-date {
+  color: var(--color-mid-light) !important;
+  font-size: var(--text-xs) !important;
+}
+
+/* Stars — override to brand gold */
+.eapps-google-reviews-list-item-rating svg path,
+.eapps-google-reviews-list-item-rating svg rect,
+.eapps-google-reviews-list-item-rating svg polygon {
+  fill: var(--color-gold) !important;
+}
