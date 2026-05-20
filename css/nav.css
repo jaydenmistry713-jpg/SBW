@@ -310,6 +310,7 @@
   }
 
   .nav-links > li > a {
+    display: flex;
     padding: var(--space-4) var(--container-pad);
     font-size: var(--text-base);
     border-bottom: 1px solid var(--color-border);

@@ -206,7 +206,7 @@ id uuid primary key, key text unique, value text, updated_at timestamptz
 - Sticky: JS adds `.scrolled` class to `#site-header` on scroll (threshold: 60px)
 - **Transparent by default**: `.main-nav` has `background: transparent` over the hero/page-hero. Nav links are white (`rgba(255,255,255,0.92)`) with `text-shadow` for readability.
 - **On scroll**: `.site-header.scrolled .main-nav` becomes `rgba(15, 25, 10, 0.95)` with `backdrop-filter: blur(8px)` and a shadow.
-- **Mobile menu open**: `.main-nav:has(.nav-toggle.is-open)` becomes `rgba(15, 25, 10, 0.97)` so the X icon reads cleanly without the hero image bleeding through.
+- **Mobile menu open**: `.main-nav:has(.nav-toggle.is-open)` becomes `rgba(15, 25, 10, 0.97)` so the X icon reads cleanly without the hero image bleeding through. Mobile nav `<a>` elements are `display: flex` (overriding `inline-flex`) so the border-bottom dividers span the full drawer width.
 - Mobile drawer: white background — links override back to `var(--color-dark)` in `@media (max-width: 767px)`.
 - Hamburger bars: white (`rgba(255,255,255,0.9)`) — readable against both transparent hero and dark scrolled state.
 - Mobile: `.nav-toggle` toggles `.is-open` on `#nav-links`; body overflow hidden while open
