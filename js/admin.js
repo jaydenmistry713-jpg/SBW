@@ -688,6 +688,152 @@
   }
 
   // ---------------------------------------------------------------------------
+  // ENQUIRIES MANAGER
+  // ---------------------------------------------------------------------------
+  function initEnquiries() {
+    fetchEnquiries();
+  }
+
+  async function fetchEnquiries() {
+    var list = document.getElementById('enquiries-list');
+    if (!list) return;
+
+    if (!window.NETLIFY_TOKEN || window.NETLIFY_TOKEN.indexOf('PASTE_') !== -1 ||
+        !window.NETLIFY_SITE_ID || window.NETLIFY_SITE_ID.indexOf('PASTE_') !== -1) {
+      list.innerHTML = buildSetupNoticeHTML();
+      return;
+    }
+
+    list.innerHTML = '<p style="color:var(--color-mid);">Loading enquiries…</p>';
+
+    try {
+      var headers = { 'Authorization': 'Bearer ' + window.NETLIFY_TOKEN };
+
+      var formsRes = await fetch(
+        'https://api.netlify.com/api/v1/sites/' + window.NETLIFY_SITE_ID + '/forms',
+        { headers: headers }
+      );
+      if (!formsRes.ok) throw new Error('API error ' + formsRes.status + ' — check your token and site ID.');
+      var forms = await formsRes.json();
+
+      var enquiryForm = forms.find(function (f) { return f.name === 'enquiry'; });
+
+      if (!enquiryForm) {
+        list.innerHTML = '<p class="enquiries-empty">No enquiries received yet. Once someone submits the contact form, submissions will appear here.</p>';
+        return;
+      }
+
+      var subsRes = await fetch(
+        'https://api.netlify.com/api/v1/forms/' + enquiryForm.id + '/submissions?per_page=100',
+        { headers: headers }
+      );
+      if (!subsRes.ok) throw new Error('API error ' + subsRes.status + ' fetching submissions.');
+      var submissions = await subsRes.json();
+
+      renderEnquiries(submissions);
+    } catch (err) {
+      console.error('Failed to fetch enquiries:', err);
+      list.innerHTML = '<div class="admin-alert admin-alert--error is-visible" style="margin:0;">' + escapeHtml(err.message || 'Failed to load enquiries.') + '</div>';
+    }
+  }
+
+  function renderEnquiries(submissions) {
+    var list = document.getElementById('enquiries-list');
+    if (!list) return;
+
+    if (!submissions.length) {
+      list.innerHTML = '<p class="enquiries-empty">No enquiries received yet.</p>';
+      return;
+    }
+
+    var countText = submissions.length + ' enquir' + (submissions.length === 1 ? 'y' : 'ies') + ' received';
+    list.innerHTML = '<p class="enquiries-count">' + countText + '</p>'
+      + submissions.map(buildEnquiryCardHTML).join('');
+
+    list.querySelectorAll('.enquiry-card__header').forEach(function (header) {
+      header.addEventListener('click', function () {
+        header.closest('.enquiry-card').classList.toggle('is-open');
+      });
+    });
+  }
+
+  function buildEnquiryCardHTML(sub) {
+    var d = sub.data || {};
+
+    var submitted = new Date(sub.created_at);
+    var submittedStr = submitted.toLocaleDateString('en-GB', {
+      day: 'numeric', month: 'short', year: 'numeric',
+      hour: '2-digit', minute: '2-digit'
+    });
+
+    var services = [];
+    if (d.service_planning)   services.push('Event Planning');
+    if (d.service_management) services.push('Event Management');
+    if (d.service_decor)      services.push('Bespoke Décor');
+    if (d.service_catering)   services.push('Catering');
+
+    var metaHTML = '<span>' + escapeHtml(submittedStr) + '</span>';
+    if (d.event_type) {
+      metaHTML += '<span class="enquiry-card__badge">' + escapeHtml(String(d.event_type)) + '</span>';
+    }
+    if (d.event_date) {
+      metaHTML += '<span>Event: ' + escapeHtml(String(d.event_date)) + '</span>';
+    }
+
+    var fields = [
+      ['Phone',            d.phone,            false],
+      ['Email',            d.email,            false],
+      ['Event Date',       d.event_date,       false],
+      ['Event Type',       d.event_type,       false],
+      ['Services',         services.length ? services.join(', ') : null, false],
+      ['Event Details',    d.event_details,    true],
+      ['Menu Type',        d.menu_type,        false],
+      ['Dietary Notes',    d.dietary_notes,    true],
+      ['Décor Theme', d.decor_theme,      true],
+      ['Venue Confirmed',  d.venue_confirmed,  false],
+      ['Venue Name',       d.venue_name,       false],
+      ['Guest Count',      d.guest_count,      false],
+      ['Additional Notes', d.additional_notes, true]
+    ];
+
+    var fieldsHTML = fields
+      .filter(function (f) { return f[1]; })
+      .map(function (f) {
+        var cls = 'enquiry-field' + (f[2] ? ' enquiry-field--full' : '');
+        return '<div class="' + cls + '">'
+          + '<span class="enquiry-field__label">' + escapeHtml(f[0]) + '</span>'
+          + '<span class="enquiry-field__value">' + escapeHtml(String(f[1])) + '</span>'
+          + '</div>';
+      })
+      .join('');
+
+    return '<div class="enquiry-card">'
+      + '<div class="enquiry-card__header">'
+      + '<div class="enquiry-card__info">'
+      + '<div class="enquiry-card__name">' + escapeHtml(d.full_name || 'Unknown') + '</div>'
+      + '<div class="enquiry-card__meta">' + metaHTML + '</div>'
+      + '</div>'
+      + '<svg class="enquiry-card__chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6,9 12,15 18,9"/></svg>'
+      + '</div>'
+      + '<div class="enquiry-card__body">'
+      + '<div class="enquiry-fields">' + fieldsHTML + '</div>'
+      + '</div>'
+      + '</div>';
+  }
+
+  function buildSetupNoticeHTML() {
+    return '<div class="enquiry-setup-notice">'
+      + '<strong>Setup required</strong>'
+      + '<p>To view form submissions, add your Netlify credentials to <code>js/netlify-config.js</code>:</p>'
+      + '<ol>'
+      + '<li>Go to <strong>app.netlify.com → User Settings → Applications</strong> and create a personal access token</li>'
+      + '<li>Go to <strong>Site Settings → General → Site information</strong> and copy your Site ID</li>'
+      + '<li>Paste both values into <code>js/netlify-config.js</code></li>'
+      + '</ol>'
+      + '</div>';
+  }
+
+  // ---------------------------------------------------------------------------
   // UTILITY
   // ---------------------------------------------------------------------------
   function escapeHtml(str) {
@@ -716,7 +862,9 @@
     } else if (session) {
       initSignOut();
 
-      if (document.getElementById('admin-gallery-grid')) {
+      if (document.getElementById('enquiries-list')) {
+        initEnquiries();
+      } else if (document.getElementById('admin-gallery-grid')) {
         initGallery();
       } else if (document.getElementById('buffet-menus-container')) {
         initMenus();

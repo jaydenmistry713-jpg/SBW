@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Gallery Manager | SBW Events CMS</title>
+  <title>Enquiries | SBW Events CMS</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -21,13 +21,13 @@
       </div>
       <ul class="admin-nav">
         <li>
-          <a href="/admin/enquiries.html">
+          <a href="/admin/enquiries.html" class="is-active">
             <svg class="admin-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
             Enquiries
           </a>
         </li>
         <li>
-          <a href="/admin/gallery.html" class="is-active">
+          <a href="/admin/gallery.html">
             <svg class="admin-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21,15 16,10 5,21"/></svg>
             Gallery
           </a>
@@ -56,7 +56,7 @@
     <!-- Main Content -->
     <div class="admin-main">
       <div class="admin-topbar">
-        <h1>Gallery Manager</h1>
+        <h1>Enquiries</h1>
         <div class="admin-topbar__user">
           <span id="user-email"></span>
           <button class="admin-topbar__signout" id="signout-btn">Sign Out</button>
@@ -64,21 +64,9 @@
       </div>
 
       <div class="admin-content">
-        <!-- Alert -->
         <div class="admin-alert" id="admin-alert"></div>
-
-        <!-- Upload Zone -->
-        <div class="upload-zone" id="upload-zone">
-          <div class="upload-zone__icon">📷</div>
-          <h3>Upload Images</h3>
-          <p>Drag and drop images here, or click to select files</p>
-          <label class="btn btn--green" for="file-input" style="cursor:pointer">Choose Files</label>
-          <input type="file" id="file-input" accept="image/*" multiple>
-        </div>
-
-        <!-- Gallery Grid -->
-        <div id="admin-gallery-grid" class="admin-gallery-grid">
-          <p style="color:var(--color-mid);grid-column:1/-1;text-align:center;padding:3rem 0;">Loading gallery...</p>
+        <div id="enquiries-list">
+          <p style="color:var(--color-mid);">Loading enquiries…</p>
         </div>
       </div>
     </div>
@@ -87,6 +75,7 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="/js/supabase-config.js"></script>
+  <script src="/js/netlify-config.js"></script>
   <script src="/js/admin.js"></script>
 </body>
 </html>

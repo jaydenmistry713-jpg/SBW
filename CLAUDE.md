@@ -56,6 +56,7 @@ No environment variables required — the Elfsight widget is a client-side CDN e
     catering.html         — Menu selector (Buffet/Table Service, Menu 1/2)
   /admin/
     index.html            — Supabase Auth login
+    enquiries.html        — Netlify form submissions viewer (tap/click to expand)
     gallery.html          — Gallery manager (upload, edit, delete)
     menus.html            — Menu item editor
     texts.html            — Editable text fields
@@ -74,8 +75,9 @@ No environment variables required — the Elfsight widget is a client-side CDN e
     menu-selector.js      — Tab + sidebar + panel logic; Supabase CMS fetch with static fallback
     contact-form.js       — Conditional show/hide logic; Netlify fetch submit; URL param pre-fill
     gallery.js            — Supabase fetch, lightbox (prev/next/Esc/overlay) — no filter logic
-    admin.js              — Supabase Auth, gallery CRUD, menu editor, text editor
+    admin.js              — Supabase Auth, gallery CRUD, menu editor, text editor, enquiries viewer
     supabase-config.js    — Supabase client init (credentials filled in)
+    netlify-config.js     — Netlify personal access token + site ID (fill in before use)
 ```
 
 ---
@@ -259,6 +261,7 @@ id uuid primary key, key text unique, value text, updated_at timestamptz
 - All admin pages check session on load; redirect to login if none
 - `admin.js` detects current page by checking for key element IDs
 - **Menus manager** (`/admin/menus.html`): groups items by `course_name`; supports add/remove items per course, add/remove courses, and a "Seed default menus" button for first-time setup. Save uses delete+reinsert for the full type+number combo.
+- **Enquiries viewer** (`/admin/enquiries.html`): fetches Netlify form submissions via Netlify API using `window.NETLIFY_TOKEN` + `window.NETLIFY_SITE_ID` from `netlify-config.js`. Lists submissions as tap-to-expand cards (name, submitted date, event type badge, event date in header; all form fields in the body). Shows setup instructions if credentials not filled in. Enquiries is the first nav item in the sidebar (most frequent use).
 
 ---
 
