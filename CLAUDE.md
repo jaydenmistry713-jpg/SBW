@@ -11,6 +11,11 @@ SBW Events website for sbwevents.co.uk. Family-run weddings and events business 
 **Instagram:** @shadibiyahwale  
 **Built by:** Mistuzzo Marketing (Jayden Mistry)
 
+### Pending client message — Asian identity direction
+> Hey! Just a heads up on a change we made — the site previously mentioned Asian weddings quite heavily throughout, but we felt it was making things seem too niche and could put off potential clients from other backgrounds. We've broadened the language across the site so it now reads as weddings and events for everyone, while still keeping a nod to South Asian expertise in the About section.
+>
+> When you have a look at the demo, let us know — are you happy with that direction, or would you prefer we lean back into the Asian weddings angle more?
+
 ---
 
 ## Tech Stack — STRICTLY HTML, CSS, VANILLA JAVASCRIPT ONLY
