@@ -56,7 +56,7 @@ No environment variables required — the Elfsight widget is a client-side CDN e
     catering.html         — Menu selector (Buffet/Table Service, Menu 1/2)
   /admin/
     index.html            — Supabase Auth login
-    enquiries.html        — Netlify form submissions viewer (tap/click to expand)
+    enquiries.html        — Enquiries viewer (reads from Supabase enquiries table; tap/click to expand)
     gallery.html          — Gallery manager (upload, edit, delete)
     menus.html            — Menu item editor
     texts.html            — Editable text fields
@@ -147,6 +147,7 @@ Never hardcode hex values in component CSS — always use variables.
 ## Before Go-Live Checklist
 1. ~~**supabase-config.js**~~ — Done. Credentials filled in.
 2. ~~**Supabase tables**~~ — Done. `gallery_images`, `catering_menus`, `editable_texts` created; storage bucket `gallery` created; RLS set up; admin user at SBWevents@outlook.com created.
+   - **`enquiries` table** — Created with RLS + anon INSERT + authenticated SELECT policies. Also ran `GRANT INSERT ON public.enquiries TO anon` and `GRANT SELECT ON public.enquiries TO authenticated`. **ISSUE: inserts from contact form still returning 403 / not saving.** `contact-form.js` saves to Supabase alongside Netlify submit; Edge tracking prevention may be interfering — try testing in Chrome or with tracking prevention off. Next session: debug the 403.
 3. **Netlify** — Connect repo; set form notification for form `enquiry` → SBWevents@outlook.com
 4. **Google Reviews** — Paste the Elfsight widget `<script>` tag into the `<!-- PASTE ELFSIGHT GOOGLE REVIEWS SCRIPT HERE -->` comment in `index.html`. Then add any CSS overrides to `css/cards.css` under the Elfsight section to match brand styles.
 5. **Replace stock images** — Client uploads real photos via admin CMS (`/admin/gallery.html`)
