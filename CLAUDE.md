@@ -1,7 +1,9 @@
 # CLAUDE.md — SBW Events Website
 
 ## Project Overview
-SBW Events website for sbwevents.co.uk. Family-run Asian wedding and events business based in Scotland. The site is fully built and in revision/maintenance phase.
+SBW Events website for sbwevents.co.uk. Family-run weddings and events business based in Scotland. The site is fully built and in revision/maintenance phase.
+
+**Tone/identity note:** SBW Events is open to all occasions and cultures — not exclusively Asian weddings. South Asian expertise is mentioned sparingly (once in the About "Cultural Expertise" value card and implicitly through the business name "Shadi Biyah Wale"). Do NOT lead with "Asian weddings" in headlines or descriptions.
 
 **Enquiries email:** SBWevents@outlook.com  
 **Display emails:** SBWevents@outlook.com + shadibiyahwale@outlook.com  
@@ -219,6 +221,7 @@ id uuid primary key, key text unique, value text, updated_at timestamptz
 - 5 slides, 5s interval, CSS opacity fade
 - `hero-slider.js`: dots, touch swipe, pause on hover
 - Dots: `.hero__dot` with `.is-active`, counter in `.hero__counter`
+- Tagline: "Shadi Biyah / Wale" (h1 — "Wale" in gold italic via `<span>`) replacing the old "Your Vision / Our Creation" copy
 
 ### Menu Selector (catering.html only)
 - Tabs: `[data-tab]` → `#tab-buffet` / `#tab-table`
