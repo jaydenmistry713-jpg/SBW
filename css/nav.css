@@ -261,6 +261,13 @@
   box-shadow: 0 4px 24px rgba(0, 0, 0, 0.35);
 }
 
+/* Mobile menu open — solid nav so X icon reads clearly against dark bg */
+@media (max-width: 767px) {
+  .main-nav:has(.nav-toggle.is-open) {
+    background-color: rgba(15, 25, 10, 0.97);
+  }
+}
+
 /* === Mobile Nav === */
 @media (max-width: 767px) {
   .top-bar__contact .sep,

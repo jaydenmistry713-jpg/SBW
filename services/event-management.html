@@ -23,7 +23,7 @@
     .feature-item__icon { width: 40px; height: 40px; background: var(--color-green); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; color: var(--color-white); font-size: 1.2rem; flex-shrink: 0; }
     .feature-item h4 { font-size: var(--text-base); margin-bottom: var(--space-1); }
     .feature-item p { font-size: var(--text-sm); color: var(--color-mid); line-height: 1.5; }
-    .ideal-for { display: flex; flex-wrap: wrap; gap: var(--space-3); margin-top: var(--space-6); }
+    .ideal-for { display: flex; flex-wrap: wrap; gap: var(--space-3); margin-top: var(--space-6); justify-content: center; }
     .ideal-tag { padding: var(--space-2) var(--space-5); background: var(--color-white); border: 2px solid var(--color-gold); border-radius: var(--radius-full); font-size: var(--text-sm); font-weight: 500; color: var(--color-gold-dark); }
     @media (min-width: 1024px) { .service-detail { grid-template-columns: 1fr 1fr; } .feature-list { grid-template-columns: repeat(2, 1fr); } }
   </style>
@@ -168,13 +168,9 @@
     </section>
 
     <!-- Ideal For -->
-    <section class="section" aria-labelledby="management-ideal-heading">
-      <div class="container">
-        <div class="section-header section-header--center">
-          <span class="section-label">Perfect For</span>
-          <h2 class="section-title" id="management-ideal-heading">Ideal For</h2>
-          <p class="section-subtitle">Our on-the-day event management service suits occasions of every scale across Scotland and North England.</p>
-        </div>
+    <section class="section" aria-label="Events this service is ideal for">
+      <div class="container" style="text-align: center;">
+        <p class="section-subtitle">Our on-the-day event management service suits occasions of every scale across Scotland and North England.</p>
         <div class="ideal-for" role="list" aria-label="Events this service is ideal for">
           <span class="ideal-tag" role="listitem">Weddings</span>
           <span class="ideal-tag" role="listitem">Corporate Events</span>

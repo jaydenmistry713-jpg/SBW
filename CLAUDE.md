@@ -143,6 +143,7 @@ Never hardcode hex values in component CSS — always use variables.
 4. **Google Reviews** — Paste the Elfsight widget `<script>` tag into the `<!-- PASTE ELFSIGHT GOOGLE REVIEWS SCRIPT HERE -->` comment in `index.html`. Then add any CSS overrides to `css/cards.css` under the Elfsight section to match brand styles.
 5. **Replace stock images** — Client uploads real photos via admin CMS (`/admin/gallery.html`)
 6. **About page content** — Client supplies real team story and portrait photo
+7. **About stats** — Currently shows 100+ Events Delivered, 5★ Google Rating, 52.8K Instagram Followers (3 stats, 3-col layout at 1024px+)
 
 ---
 
@@ -205,6 +206,7 @@ id uuid primary key, key text unique, value text, updated_at timestamptz
 - Sticky: JS adds `.scrolled` class to `#site-header` on scroll (threshold: 60px)
 - **Transparent by default**: `.main-nav` has `background: transparent` over the hero/page-hero. Nav links are white (`rgba(255,255,255,0.92)`) with `text-shadow` for readability.
 - **On scroll**: `.site-header.scrolled .main-nav` becomes `rgba(15, 25, 10, 0.95)` with `backdrop-filter: blur(8px)` and a shadow.
+- **Mobile menu open**: `.main-nav:has(.nav-toggle.is-open)` becomes `rgba(15, 25, 10, 0.97)` so the X icon reads cleanly without the hero image bleeding through.
 - Mobile drawer: white background — links override back to `var(--color-dark)` in `@media (max-width: 767px)`.
 - Hamburger bars: white (`rgba(255,255,255,0.9)`) — readable against both transparent hero and dark scrolled state.
 - Mobile: `.nav-toggle` toggles `.is-open` on `#nav-links`; body overflow hidden while open
@@ -234,6 +236,7 @@ id uuid primary key, key text unique, value text, updated_at timestamptz
 - No filter buttons — all images shown, visual-first layout
 - Grid: editorial CSS Grid with `nth-child` column spans for varied shapes (no row spans — avoids dense-flow complexity). Pattern: mobile 2-col every-3rd full-width; 640px 3-col every-2nd spans 2; 1024px 4-col every-3rd spans 2. Row heights set via `grid-auto-rows` per breakpoint.
 - Lightbox: `#lightbox` with prev/next/close/Escape/overlay-click
+- **Page hero**: uses `<img class="page-hero__img">` directly inside `.page-hero` (same as other sub-pages) — NOT a `.page-hero__bg` wrapper div, which would cause the image to flow inline as a flex child instead of filling the hero.
 
 ### Recent Work Grid (index.html only)
 - **Full-bleed layout**: `.work-grid` is a direct child of the `.section`, NOT wrapped in `.container` — images span full viewport width edge-to-edge.
