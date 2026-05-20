@@ -202,20 +202,44 @@
     })
     .then(function (response) {
       if (!response.ok) {
-        // Non-2xx — fall back to native submit
         throw new Error('Network response was not ok');
       }
+      saveEnquiryToSupabase(formData);
       showThankyou();
     })
     .catch(function () {
-      // Re-enable the button before native submit
       if (submitBtn) {
         submitBtn.disabled = false;
         submitBtn.textContent = 'Send Enquiry';
       }
-      form.submit(); // fallback to native submit
+      form.submit();
     });
   });
+
+  function saveEnquiryToSupabase(formData) {
+    if (!window.supabaseClient) return;
+    window.supabaseClient.from('enquiries').insert({
+      full_name:          formData.get('full_name')          || null,
+      phone:              formData.get('phone')              || null,
+      email:              formData.get('email')              || null,
+      event_date:         formData.get('event_date')         || null,
+      event_type:         formData.get('event_type')         || null,
+      service_planning:   !!formData.get('service_planning'),
+      service_management: !!formData.get('service_management'),
+      service_decor:      !!formData.get('service_decor'),
+      service_catering:   !!formData.get('service_catering'),
+      event_details:      formData.get('event_details')      || null,
+      menu_type:          formData.get('menu_type')          || null,
+      dietary_notes:      formData.get('dietary_notes')      || null,
+      decor_theme:        formData.get('decor_theme')        || null,
+      venue_confirmed:    formData.get('venue_confirmed')    || null,
+      venue_name:         formData.get('venue_name')         || null,
+      guest_count:        formData.get('guest_count')        || null,
+      additional_notes:   formData.get('additional_notes')   || null
+    }).then(function (result) {
+      if (result.error) console.warn('Supabase enquiry save failed:', result.error);
+    });
+  }
 
   function showThankyou() {
     form.style.display = 'none';
