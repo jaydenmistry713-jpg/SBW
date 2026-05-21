@@ -26,7 +26,13 @@
       const isOpen = navLinks.classList.toggle('is-open');
       navToggle.classList.toggle('is-open', isOpen);
       navToggle.setAttribute('aria-expanded', String(isOpen));
-      document.body.style.overflow = isOpen ? 'hidden' : '';
+      if (isOpen) {
+        // Use actual rendered header height so the drawer aligns correctly at any scroll position
+        navLinks.style.top = header.offsetHeight + 'px';
+        document.body.style.overflow = 'hidden';
+      } else {
+        document.body.style.overflow = '';
+      }
     });
   }
 

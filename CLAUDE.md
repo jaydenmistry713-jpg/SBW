@@ -18,6 +18,20 @@ SBW Events website for sbwevents.co.uk. Family-run weddings and events business 
 
 ---
 
+## CRITICAL: File Editing Rules
+
+### NEVER use PowerShell `Get-Content` / `Set-Content` on HTML files
+PowerShell 5.1's `Get-Content` reads UTF-8 files as Windows-1252 by default (no BOM = ambiguous encoding). Re-saving with `Set-Content -Encoding utf8` then writes the mis-read bytes as UTF-8, corrupting every non-ASCII character (e.g. `—` → `â€"`, `é` → `Ã©`). This has happened twice.
+
+**Always use one of these safe alternatives instead:**
+1. The `Edit` tool (preferred — diff-only, no re-encoding)
+2. Python: `open(f, 'r', encoding='utf-8')` / `open(f, 'w', encoding='utf-8')` (no BOM)
+3. PowerShell .NET class: `[System.IO.File]::ReadAllText(path, [Text.Encoding]::UTF8)` + `[System.IO.File]::WriteAllText(path, content, (New-Object Text.UTF8Encoding $false))`
+
+If symbols like `â€"` or `Ã©` ever appear in HTML files, run `fix_encoding.py` (in project root) to reverse the mojibake.
+
+---
+
 ## Tech Stack — STRICTLY HTML, CSS, VANILLA JAVASCRIPT ONLY
 - No frameworks (no React, Vue, Next.js, Angular, Svelte)
 - No CSS frameworks (no Tailwind, Bootstrap)
