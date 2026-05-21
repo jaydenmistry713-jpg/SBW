@@ -45,7 +45,7 @@ Per the CSS spec, those properties turn the element into a new containing block 
 - Database/CMS: Supabase JS SDK loaded via CDN
 - Forms: Netlify Forms (zero email backend code)
 - Reviews: **Elfsight Google Reviews widget** (CDN embed — no server-side code, no API key needed)
-- No Netlify Functions — the `/netlify/functions/reviews.js` proxy was removed when switching to Elfsight
+- **Netlify plan: Pro** — Functions are available if ever needed (not currently used; `/netlify/functions/reviews.js` was removed when switching to Elfsight)
 
 ## Local Development
 **Files use root-relative paths — they MUST be served from a local server, not opened directly.**
@@ -259,6 +259,8 @@ id uuid primary key, key text unique, value text, updated_at timestamptz
 - Netlify AJAX submit via `fetch('/')` with URL-encoded body
 - Thank-you div `#form-thankyou` shown on success; form hidden
 - URL params: `?service=event-planning|event-management|bespoke-decor|catering` pre-fills form
+- **Conditional sections use `disabled` on hidden inputs** — `showSection()` enables all child inputs, `hideSection()` disables them. Disabled inputs are excluded from FormData entirely, so Netlify's email only shows fields the user actually filled in. All conditional sections are initialised as disabled on page load.
+- **Netlify form email body cannot be customised** — regardless of plan tier, Netlify's form notification emails have a fixed plain-text body. Only the subject line and recipient can be configured in the dashboard. To get HTML-designed emails in future, the path is: Netlify Function triggered by form submission → Outlook SMTP (`smtp.office365.com`, `SBWevents@outlook.com`) → custom HTML template.
 
 ### Gallery (gallery.html only)
 - Static fallback images in HTML; Supabase replaces on load if configured
