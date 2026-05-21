@@ -76,6 +76,7 @@
   justify-content: space-between;
   height: 96px;
   gap: var(--space-4);
+  transition: height var(--transition-base);
 }
 
 /* Logo */
@@ -90,6 +91,7 @@
   height: 88px;
   width: auto;
   display: block;
+  transition: height var(--transition-base);
 }
 
 .logo-text {
@@ -270,6 +272,15 @@
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   z-index: -1;
+}
+
+/* Shrink nav to original compact size on scroll */
+.site-header.scrolled .main-nav .container {
+  height: 72px;
+}
+
+.site-header.scrolled .nav-logo__img {
+  height: 64px;
 }
 
 /* Mobile menu open — solid nav so X icon reads clearly against dark bg */
