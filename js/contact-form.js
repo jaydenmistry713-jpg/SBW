@@ -195,10 +195,18 @@
 
     var formData = new FormData(form);
 
+    // Build submission params — skip fields with no value so Netlify's email
+    // only shows fields the user actually filled in.
+    var params = new URLSearchParams();
+    formData.forEach(function (value, key) {
+      if (typeof value === 'string' && value.trim() === '') return;
+      params.append(key, value);
+    });
+
     fetch('/', {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: new URLSearchParams(formData).toString()
+      body: params.toString()
     })
     .then(function (response) {
       if (!response.ok) {
