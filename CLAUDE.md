@@ -155,9 +155,11 @@ Never hardcode hex values in component CSS — always use variables.
 - Footer still uses text logo (white text on dark bg — image wouldn't work)
 
 ## Images
-- Real client photos in `/images/` folder (48 JPEG files, names contain spaces)
-- URL-encode spaces in `src` attributes: space → `%20`, e.g. `/images/IMG_6084%20Sumayyah.jpeg`
-- Key image assignments documented in memory file
+- Original high-res photos: `/images/` folder (48 JPEG files, ~421 MB total) — **never referenced by the site directly, do not delete**
+- Web-optimised copies: `/images/web/` folder (48 JPEG files, ~17.9 MB total) — **all HTML src/data-src attributes point here**
+- Compressed with Pillow: max 2000px, quality 82, ICC colour profiles preserved. Run `fix_encoding.py` equivalent script to re-compress if new images are added.
+- URL-encode spaces in `src` attributes: space → `%20`, e.g. `/images/web/IMG_6084%20Sumayyah.jpeg`
+- Names contain spaces, `&`, `(` `)` — always URL-encode when writing src attributes manually
 
 ---
 
