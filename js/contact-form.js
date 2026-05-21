@@ -22,15 +22,32 @@
   // Guard: only run on contact page
   if (!form) return;
 
+  // Disable all inputs inside hidden conditional sections on load so they're
+  // excluded from submission from the very first interaction.
+  [servicesSection, corporateSection, cateringSection, decorSection, planningSection, venueNameSection].forEach(function (section) {
+    if (!section) return;
+    section.querySelectorAll('input, select, textarea').forEach(function (f) {
+      f.disabled = true;
+    });
+  });
+
   // ─── Helper: show / hide a section ───────────────────────────────────────
+  // Disabled inputs are excluded from FormData entirely, so Netlify never
+  // sees them and won't include them in the email notification.
   function showSection(el) {
     if (!el) return;
     el.classList.add('is-visible');
+    el.querySelectorAll('input, select, textarea').forEach(function (f) {
+      f.disabled = false;
+    });
   }
 
   function hideSection(el) {
     if (!el) return;
     el.classList.remove('is-visible');
+    el.querySelectorAll('input, select, textarea').forEach(function (f) {
+      f.disabled = true;
+    });
   }
 
   // ─── Event type logic ─────────────────────────────────────────────────────
