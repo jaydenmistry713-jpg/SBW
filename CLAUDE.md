@@ -151,7 +151,7 @@ Never hardcode hex values in component CSS — always use variables.
 
 ## Logo
 - File: `/logo.png` — circular logo, transparent background (converted from logo.jpg via Pillow), "SBW" decorative green script, gold diamond frame, blush floral wreath
-- Used in nav as `<img src="/logo.png" class="nav-logo__img">` (height: 64px)
+- Used in nav as `<img src="/logo.png" class="nav-logo__img">` (height: 112px)
 - Footer still uses text logo (white text on dark bg — image wouldn't work)
 
 ## Images

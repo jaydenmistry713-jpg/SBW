@@ -71,7 +71,7 @@
 
   --container-max: 1600px;
   --container-pad: 1.25rem;
-  --header-height: 116px;
+  --header-height: 164px;
 }
 
 html {
@@ -539,7 +539,7 @@ h4 { font-size: var(--text-xl); font-weight: 500; }
 @media (min-width: 768px) {
   :root {
     --container-pad: 2rem;
-    --header-height: 124px;
+    --header-height: 164px;
   }
 
   .page-hero {
