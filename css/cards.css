@@ -300,6 +300,7 @@
   border: 1px solid var(--color-border);
   border-top: 2px solid rgba(201, 168, 76, 0.45);
   transition: box-shadow var(--transition-base), transform var(--transition-base);
+  text-align: center;
 }
 
 .value-card:hover {
@@ -315,7 +316,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: var(--space-4);
+  margin: 0 auto var(--space-4);
   color: var(--color-gold);
   font-size: 1.5rem;
 }

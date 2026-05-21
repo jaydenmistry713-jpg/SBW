@@ -7,6 +7,10 @@
   align-items: start;
 }
 
+.enquiry-form-wrapper {
+  order: -1;
+}
+
 /* === Contact Info Panel === */
 .contact-info {
   background-color: var(--color-cream);
@@ -346,7 +350,7 @@ select.form-control {
 
 @media (min-width: 1024px) {
   .contact-section {
-    grid-template-columns: 1fr 2fr;
+    grid-template-columns: 2fr 1fr;
     gap: var(--space-16);
   }
 

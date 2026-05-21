@@ -52,34 +52,37 @@
     }
     .about-stats {
       display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: var(--space-5);
+      grid-template-columns: repeat(3, 1fr);
+      gap: var(--space-2);
       margin: var(--space-8) 0;
     }
     .stat {
       text-align: center;
-      padding: var(--space-5);
+      padding: var(--space-3) var(--space-2);
       background: var(--color-cream);
       border-radius: var(--radius-md);
     }
     .stat__number {
       font-family: var(--font-display);
-      font-size: var(--text-4xl);
+      font-size: clamp(1.25rem, 5vw, 2.25rem);
       color: var(--color-green);
       display: block;
       line-height: 1;
       margin-bottom: var(--space-2);
     }
     .stat__label {
-      font-size: var(--text-xs);
+      font-size: clamp(0.6rem, 1.8vw, var(--text-xs));
       font-weight: 600;
-      letter-spacing: 0.1em;
+      letter-spacing: 0.08em;
       text-transform: uppercase;
       color: var(--color-mid);
     }
+    @media (min-width: 640px) {
+      .about-stats { gap: var(--space-5); }
+      .stat { padding: var(--space-5); }
+    }
     @media (min-width: 1024px) {
       .about-story { grid-template-columns: 1fr 1.1fr; }
-      .about-stats { grid-template-columns: repeat(3, 1fr); }
     }
   </style>
 </head>
@@ -162,9 +165,9 @@
           <div class="about-story__content">
             <span class="section-label">Our Story</span>
             <h2 id="story-heading">Born from a Passion for Beautiful Events</h2>
-            <p>SBW Events began as a family passion project and has grown into one of Scotland's most trusted names in weddings and events. Based in Scotland, we operate across Scotland and North England, bringing the same care and attention to every occasion — from intimate gatherings to grand celebrations.</p>
+            <p>SBW Events has grown into one of Scotland's most trusted names in weddings and events. Based in Scotland and operating across Scotland and North England, we bring the same care and attention to every occasion — from intimate gatherings to grand celebrations.</p>
             <p>Our team is built on a foundation of genuine care, cultural understanding, and an unwavering commitment to excellence. We know that every event tells a unique story, and we are privileged to help tell yours.</p>
-            <p>Whether it's the delicate drape of a mandap, the fragrance of fresh flowers, the warmth of a perfectly curated menu, or the seamless flow of an on-the-day schedule — every detail matters to us because it matters to you.</p>
+            <p>Whether it's an elegantly dressed ceremony space, the fragrance of fresh flowers, the warmth of a perfectly curated menu, or the seamless flow of an on-the-day schedule — every detail matters to us because it matters to you.</p>
             <a href="/contact.html" class="btn btn--green" style="margin-top: var(--space-4);">Start Your Journey</a>
           </div>
         </div>
