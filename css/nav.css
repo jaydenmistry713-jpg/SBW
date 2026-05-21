@@ -86,7 +86,7 @@
 }
 
 .nav-logo__img {
-  height: 54px;
+  height: 64px;
   width: auto;
   display: block;
 }
@@ -302,7 +302,7 @@
     overflow-y: auto;
     transform: translateX(100%);
     transition: transform var(--transition-base);
-    z-index: 999;
+    z-index: 10000;
   }
 
   .nav-links.is-open {

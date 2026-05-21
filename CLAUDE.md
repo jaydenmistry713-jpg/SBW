@@ -133,8 +133,8 @@ Never hardcode hex values in component CSS — always use variables.
 - Section labels: `letter-spacing: 0.25em` for refined feel
 
 ## Logo
-- File: `/logo.jpg` — circular logo, "SBW" decorative green script, gold diamond frame, blush floral wreath
-- Used in nav as `<img src="/logo.jpg" class="nav-logo__img">` (height: 54px)
+- File: `/logo.png` — circular logo, transparent background (converted from logo.jpg via Pillow), "SBW" decorative green script, gold diamond frame, blush floral wreath
+- Used in nav as `<img src="/logo.png" class="nav-logo__img">` (height: 64px)
 - Footer still uses text logo (white text on dark bg — image wouldn't work)
 
 ## Images
@@ -221,7 +221,7 @@ id uuid primary key, key text unique, value text, updated_at timestamptz
 - Mobile: `.nav-toggle` toggles `.is-open` on `#nav-links`; body overflow hidden while open
 - Dropdown: uses `visibility: hidden/visible` + `opacity` (NOT `display:none/block`) — this allows CSS transitions and prevents gap-hover bug. Mobile overrides to `display:none/block` for JS accordion.
 - Active link: `main.js` matches `window.location.pathname` and adds `.active` to matching `<li>`
-- Logo: `<img src="/logo.jpg" class="nav-logo__img">` — 54px tall image
+- Logo: `<img src="/logo.png" class="nav-logo__img">` — 64px tall image, transparent background PNG
 - **Page-hero on sub-pages**: `margin-top` removed, `padding-top: var(--header-height)` added instead — dark green bg extends behind fixed nav so transparent nav has a dark background on all pages.
 
 ### Hero Slider (index.html only)
