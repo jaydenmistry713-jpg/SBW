@@ -87,7 +87,7 @@
   // ─── Visible items helper ─────────────────────────────────────────────────
   function refreshVisibleItems() {
     visibleItems = Array.prototype.slice.call(
-      grid.querySelectorAll('.gallery-item:not(.is-hidden)')
+      grid.querySelectorAll('.gallery-item:not(.is-hidden):not(.is-deferred)')
     );
   }
 
@@ -243,12 +243,60 @@
     });
   }
 
+  // ─── Load More ────────────────────────────────────────────────────────────
+  var BATCH_SIZE = 12;
+
+  function updateCount() {
+    var countEl  = document.getElementById('gallery-count');
+    var total    = grid.querySelectorAll('.gallery-item:not(.is-hidden)').length;
+    var shown    = grid.querySelectorAll('.gallery-item:not(.is-hidden):not(.is-deferred)').length;
+    if (countEl) countEl.textContent = 'Showing ' + shown + ' of ' + total + ' photos';
+  }
+
+  function initLoadMore() {
+    var btn = document.getElementById('gallery-load-more');
+    if (!btn) return;
+
+    updateCount();
+
+    var remaining = grid.querySelectorAll('.gallery-item.is-deferred');
+    if (remaining.length === 0) {
+      btn.style.display = 'none';
+      return;
+    }
+
+    btn.addEventListener('click', function () {
+      var deferred = Array.prototype.slice.call(
+        grid.querySelectorAll('.gallery-item.is-deferred')
+      );
+      var batch = deferred.slice(0, BATCH_SIZE);
+
+      batch.forEach(function (item) {
+        item.classList.remove('is-deferred');
+        item.classList.add('is-revealing');
+        item.addEventListener('animationend', function () {
+          item.classList.remove('is-revealing');
+        }, { once: true });
+      });
+
+      bindGalleryItems();
+      refreshVisibleItems();
+      updateCount();
+
+      var stillDeferred = grid.querySelectorAll('.gallery-item.is-deferred');
+      if (stillDeferred.length === 0) {
+        btn.style.display = 'none';
+      }
+    });
+  }
+
   // ─── Init ─────────────────────────────────────────────────────────────────
   function init() {
     bindGalleryItems();
     refreshVisibleItems();
     initLightboxControls();
     initKeyboard();
+    initLoadMore();
     trySupabaseFetch();
   }
 

@@ -199,6 +199,35 @@ body.lightbox-active {
   overflow: hidden;
 }
 
+/* === Load More === */
+.gallery-item.is-deferred {
+  display: none;
+}
+
+@keyframes galleryReveal {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.gallery-item.is-revealing {
+  animation: galleryReveal 0.35s ease forwards;
+}
+
+.gallery-footer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-5);
+  margin-top: var(--space-12);
+  padding-bottom: var(--space-4);
+}
+
+.gallery-count {
+  color: var(--color-mid);
+  font-size: var(--text-sm);
+  letter-spacing: 0.03em;
+}
+
 /* === Responsive === */
 @media (min-width: 640px) {
   .gallery-grid {
