@@ -30,6 +30,9 @@ PowerShell 5.1's `Get-Content` reads UTF-8 files as Windows-1252 by default (no 
 
 If symbols like `â€"` or `Ã©` ever appear in HTML files, run `fix_encoding.py` (in project root) to reverse the mojibake.
 
+### NEVER apply backdrop-filter (or filter/transform/perspective/will-change) directly to an element that has position:fixed descendants
+Per the CSS spec, those properties turn the element into a new containing block for fixed-positioned children, which breaks their viewport-relative positioning. The mobile `#nav-links` drawer is `position:fixed` and lives inside `.main-nav`. The scrolled-state blur **must** be applied via `.main-nav::before` (a pseudo-element with `position:absolute; inset:0; z-index:-1`), NOT on `.main-nav` directly. Putting `backdrop-filter` on `.main-nav` itself collapses the drawer to zero height when scrolled.
+
 ---
 
 ## Tech Stack — STRICTLY HTML, CSS, VANILLA JAVASCRIPT ONLY

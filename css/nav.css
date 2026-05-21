@@ -67,6 +67,7 @@
   background-color: transparent;
   border-bottom: 1px solid transparent;
   transition: background-color var(--transition-base), border-color var(--transition-base), box-shadow var(--transition-base);
+  position: relative; /* needed so ::before positions inside .main-nav */
 }
 
 .main-nav .container {
@@ -252,13 +253,23 @@
   transform: translateY(-9px) rotate(-45deg);
 }
 
-/* Scrolled state — solid dark nav */
+/* Scrolled state — solid dark nav.
+   backdrop-filter is applied via ::before so .main-nav itself is NOT a
+   containing block for position:fixed children (spec: backdrop-filter
+   creates a new containing block, which would break the mobile nav drawer). */
 .site-header.scrolled .main-nav {
+  border-bottom-color: rgba(255, 255, 255, 0.06);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.35);
+}
+
+.site-header.scrolled .main-nav::before {
+  content: '';
+  position: absolute;
+  inset: 0;
   background-color: rgba(15, 25, 10, 0.95);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
-  border-bottom-color: rgba(255, 255, 255, 0.06);
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.35);
+  z-index: -1;
 }
 
 /* Mobile menu open — solid nav so X icon reads clearly against dark bg */
