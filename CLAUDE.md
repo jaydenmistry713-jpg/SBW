@@ -65,12 +65,19 @@ No environment variables required — the Elfsight widget is a client-side CDN e
   services.html           — Services overview (4 cards)
   gallery.html            — Gallery (Supabase fetch, lightbox — no filters)
   contact.html            — Contact/enquiry form (Netlify Forms)
+  blog.html               — Blog index (static card grid linking to /blog/ articles)
   netlify.toml            — Netlify build/redirect/header config
   /services/
     event-planning.html
     event-management.html
     bespoke-decor.html
     catering.html         — Menu selector (Buffet/Table Service, Menu 1/2)
+  /blog/                  — Static article pages (hand-authored HTML, no CMS)
+    5-reasons-to-have-a-wedding-coordinator.html
+    wedding-planning-timeline.html
+    choosing-a-wedding-venue-in-scotland.html
+    make-your-wedding-decor-your-own.html
+    catering-for-a-large-guest-list.html
   /admin/
     index.html            — Supabase Auth login
     enquiries.html        — Enquiries viewer (reads from Supabase enquiries table; tap/click to expand)
@@ -85,6 +92,7 @@ No environment variables required — the Elfsight widget is a client-side CDN e
     catering.css          — Menu selector UI + catering intro section
     contact-form.css      — Enquiry form, conditional sections, thank-you
     gallery.css           — Gallery editorial grid (nth-child spans), lightbox
+    blog.css              — Blog index card grid + single-article prose/tip/blockquote layout
     admin.css             — Admin dashboard, login, gallery/menu/text managers
   /js/
     main.js               — Global: sticky header, mobile menu, dropdown, active link
@@ -242,6 +250,17 @@ id uuid primary key, key text unique, value text, updated_at timestamptz
 - Active link: `main.js` matches `window.location.pathname` and adds `.active` to matching `<li>`
 - Logo: `<img src="/logo.png" class="nav-logo__img">` — 64px tall image, transparent background PNG
 - **Page-hero on sub-pages**: `margin-top` removed, `padding-top: var(--header-height)` added instead — dark green bg extends behind fixed nav so transparent nav has a dark background on all pages.
+
+### Blog (blog.html + /blog/*.html)
+- **Static, no CMS.** Every article is a hand-authored HTML file in `/blog/`. The index (`blog.html`) is a manually maintained `.blog-grid` of `.blog-card`s — when adding an article, create the `/blog/` file AND add a card to the index.
+- All blog pages reuse the standard site chrome (header/nav/footer) byte-identical to other pages, plus `/css/blog.css`. Articles also link `main.css`, `nav.css`, `cards.css`.
+- **Nav**: "Blog" is a top-level nav item between Gallery and Contact, and a footer Quick Links item, on **every** page. If the nav/footer changes, update all pages (index, about, services, gallery, contact, the 4 `/services/*`, blog.html, and all `/blog/*`).
+- Article layout: `.article` (max 760px) > `.article__meta` (tag/date/read-time) + `.article__lead` + `.article-body` (prose: h2/h3/p/ul/blockquote). Numbered tips use `.tip` > `.tip__num` + `.tip__body`. Footer `.article-footer` (back-to-blog) + shared `.cta-banner`.
+- First 5 articles are SEO-focused for "events company in Scotland" (coordinator tips, planning timeline, choosing a venue in Scotland, bespoke décor, catering at scale). Content is original and truthful to the business; South Asian heritage referenced sparingly per the brand direction.
+- Active-link highlighting: `main.js` won't mark "Blog" active on `/blog/*` article pages (same as Services on `/services/*`) — expected, consistent behaviour.
+
+### Service Area / Coverage
+- Stated on the contact page ("Where We Work" item): based in Scotland, covering the whole country (Glasgow, Edinburgh, the Central Belt and beyond) plus North England, with destination events on request. Footer tagline sitewide says "across Scotland and North England." **Confirm exact radius/named areas with the client** — current wording is a sensible default, not a precise mileage they specified.
 
 ### About Page (about.html only)
 - Page-specific layout/timeline CSS lives in an inline `<style>` block in the `<head>` (established pattern for this page — `.about-story`, `.about-stats`, `.stat`, `.timeline`).
