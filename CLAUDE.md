@@ -66,6 +66,8 @@ No environment variables required — the Elfsight widget is a client-side CDN e
   gallery.html            — Gallery (Supabase fetch, lightbox — no filters)
   contact.html            — Contact/enquiry form (Netlify Forms)
   blog.html               — Blog index (static card grid linking to /blog/ articles)
+  sitemap.xml             — SEO sitemap (all 15 public pages; update when adding/removing pages)
+  robots.txt             — Allows all, disallows /admin/, points to sitemap.xml
   netlify.toml            — Netlify build/redirect/header config
   /services/
     event-planning.html
@@ -250,6 +252,13 @@ id uuid primary key, key text unique, value text, updated_at timestamptz
 - Active link: `main.js` matches `window.location.pathname` and adds `.active` to matching `<li>`
 - Logo: `<img src="/logo.png" class="nav-logo__img">` — 64px tall image, transparent background PNG
 - **Page-hero on sub-pages**: `margin-top` removed, `padding-top: var(--header-height)` added instead — dark green bg extends behind fixed nav so transparent nav has a dark background on all pages.
+
+### SEO (sitemap, robots, structured data, social meta)
+- **`sitemap.xml`** lists all 15 public pages (excludes `/admin/`). **When you add or remove a page, update the sitemap.**
+- **`robots.txt`** allows everything except `/admin/` and references the sitemap.
+- **Structured data (JSON-LD)**: every public page carries a `LocalBusiness` block (name, `areaServed` = Scotland + North England, phone, email, logo, social `sameAs`). Each `/blog/*` article additionally carries a `BlogPosting` block (headline, description, hero image, `datePublished`/`dateModified`, publisher). Admin pages have none.
+- **Social meta**: every public page has `og:image`, `og:url`, `twitter:card` (summary) and `twitter:image`. **The image is the logo (`/logo.png`)** per client request. Note: a transparent-background logo can render with a plain/box background on some social platforms — if richer social previews are wanted later, swap to a dedicated 1200×630 banner and switch `twitter:card` to `summary_large_image`.
+- These were applied in bulk via a Node script (UTF-8 safe). New pages do NOT get them automatically — add the tags + JSON-LD when creating a page, or re-run the injection logic.
 
 ### Blog (blog.html + /blog/*.html)
 - **Static, no CMS.** Every article is a hand-authored HTML file in `/blog/`. The index (`blog.html`) is a manually maintained `.blog-grid` of `.blog-card`s — when adding an article, create the `/blog/` file AND add a card to the index.
