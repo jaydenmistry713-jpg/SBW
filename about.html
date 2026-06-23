@@ -77,6 +77,57 @@
       text-transform: uppercase;
       color: var(--color-mid);
     }
+    /* Our Journey timeline */
+    .timeline {
+      list-style: none;
+      max-width: 720px;
+      margin: var(--space-12) auto 0;
+    }
+    .timeline__item {
+      position: relative;
+      padding-left: var(--space-10);
+      padding-bottom: var(--space-10);
+    }
+    .timeline__item:last-child { padding-bottom: 0; }
+    .timeline__item::before {
+      content: '';
+      position: absolute;
+      left: 7px;
+      top: var(--space-5);
+      bottom: 0;
+      width: 2px;
+      background: var(--color-gold-light);
+    }
+    .timeline__item:last-child::before { display: none; }
+    .timeline__item::after {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 4px;
+      width: 16px;
+      height: 16px;
+      border-radius: var(--radius-full);
+      background: var(--color-gold);
+      box-shadow: 0 0 0 3px var(--color-cream), 0 0 0 4px var(--color-gold-light);
+    }
+    .timeline__phase {
+      display: block;
+      font-size: var(--text-xs);
+      font-weight: 600;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--color-gold-dark);
+      margin-bottom: var(--space-2);
+    }
+    .timeline__item h3 {
+      color: var(--color-green);
+      margin-bottom: var(--space-3);
+    }
+    .timeline__item p {
+      color: var(--color-mid);
+      line-height: 1.8;
+      margin: 0;
+    }
     @media (min-width: 640px) {
       .about-stats { gap: var(--space-5); }
       .stat { padding: var(--space-5); }
@@ -174,8 +225,46 @@
       </div>
     </section>
 
+    <!-- Our Journey -->
+    <section class="section section--cream" aria-labelledby="journey-heading">
+      <div class="container">
+        <div class="section-header section-header--center">
+          <span class="section-label">Our Journey</span>
+          <h2 class="section-title" id="journey-heading">Six Years in the Making</h2>
+          <p class="section-subtitle">From a mother-and-daughter dream to one of Scotland's most trusted event teams.</p>
+        </div>
+        <ol class="timeline">
+          <li class="timeline__item">
+            <span class="timeline__phase">Where It Began</span>
+            <h3>A Mother &amp; Daughter, a Shared Vision</h3>
+            <p>SBW Events began as a mother-and-daughter partnership just before 2020 — family-run from the very first day. We started with smaller, bespoke celebrations, pouring care into every detail for the South Asian community that first welcomed us.</p>
+          </li>
+          <li class="timeline__item">
+            <span class="timeline__phase">Growing Together</span>
+            <h3>Built on Our Community's Trust</h3>
+            <p>The response was overwhelming. Year after year, the support of our community allowed us to grow — building a dedicated team, multiple vans, a warehouse, a showroom, and a strong support system behind every event.</p>
+          </li>
+          <li class="timeline__item">
+            <span class="timeline__phase">Today</span>
+            <h3>Bigger Celebrations, the Same Care</h3>
+            <p>Six years on, we deliver events on a scale we once only imagined — celebrations for up to 500 guests, and even multiple events in a single day, without ever losing the attention to detail that defines us.</p>
+          </li>
+          <li class="timeline__item">
+            <span class="timeline__phase">Going Further</span>
+            <h3>Destination Weddings</h3>
+            <p>In the last couple of years we've taken our work further afield, designing and delivering destination weddings for couples who wanted us by their side wherever they chose to celebrate.</p>
+          </li>
+          <li class="timeline__item">
+            <span class="timeline__phase">Always</span>
+            <h3>Forever Creating Something New</h3>
+            <p>What drives us is creativity. We love exploring fresh and challenging concepts, and we never settle for repeating the same décor — every event we create is designed entirely around the people it's for.</p>
+          </li>
+        </ol>
+      </div>
+    </section>
+
     <!-- Stats -->
-    <section class="section--sm section--cream" aria-label="Our achievements">
+    <section class="section--sm section--warm" aria-label="Our achievements">
       <div class="container">
         <div class="about-stats">
           <div class="stat">

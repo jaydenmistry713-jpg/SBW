@@ -243,6 +243,11 @@ id uuid primary key, key text unique, value text, updated_at timestamptz
 - Logo: `<img src="/logo.png" class="nav-logo__img">` — 64px tall image, transparent background PNG
 - **Page-hero on sub-pages**: `margin-top` removed, `padding-top: var(--header-height)` added instead — dark green bg extends behind fixed nav so transparent nav has a dark background on all pages.
 
+### About Page (about.html only)
+- Page-specific layout/timeline CSS lives in an inline `<style>` block in the `<head>` (established pattern for this page — `.about-story`, `.about-stats`, `.stat`, `.timeline`).
+- **Section order**: Page hero → Story (`section--warm`) → **Our Journey** (`section--cream`, timeline) → Stats (`section--warm`) → Values (`section--warm`). Stats was changed from cream to warm so it doesn't collide with the cream Journey section and so the cream `.stat` cards stand out.
+- **Our Journey** — a gold vertical timeline (`.timeline` > `.timeline__item` with `::before` line + `::after` dot, `.timeline__phase` label + `h3` + `p`). Five phases telling the company history (mother-daughter start just before 2020, community-driven growth → team/vans/warehouse/showroom, events up to 500 guests + multiple/day, destination weddings, creativity/no-repeat-décor ethos). Content sourced from a client voice note — South Asian origin mentioned once and sparingly per the brand direction; no fabricated dates or claims.
+
 ### Hero Slider (index.html only)
 - 5 slides, 5s interval, CSS opacity fade
 - `hero-slider.js`: dots, touch swipe, pause on hover
