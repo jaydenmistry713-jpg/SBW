@@ -60,7 +60,7 @@ No environment variables required — the Elfsight widget is a client-side CDN e
 ## File Structure (complete build)
 ```
 /
-  index.html              — Homepage (hero slider, services, reviews, CTA)
+  index.html              — Homepage (hero slider, services, reviews) — CTA banner removed; .cta-banner still used on /blog/* articles
   about.html              — About page (story, values, stats)
   services.html           — Services overview (4 cards)
   gallery.html            — Gallery (Supabase fetch, lightbox — no filters)

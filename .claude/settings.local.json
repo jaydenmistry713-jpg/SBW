@@ -15,7 +15,15 @@
       "Bash(Remove-Item \"C:\\\\Users\\\\jayde\\\\Desktop\\\\Websites\\\\SBW\\\\netlify\\\\functions\\\\reviews.js\" -Force)",
       "Bash(Remove-Item \"C:\\\\Users\\\\jayde\\\\Desktop\\\\Websites\\\\SBW\\\\netlify\\\\functions\" -Force -ErrorAction SilentlyContinue)",
       "Bash(Remove-Item \"C:\\\\Users\\\\jayde\\\\Desktop\\\\Websites\\\\SBW\\\\netlify\" -Force -ErrorAction SilentlyContinue)",
-      "Bash(Write-Output \"Removed\")"
+      "Bash(Write-Output \"Removed\")",
+      "Bash(git *)",
+      "Bash(dir \"C:\\\\Users\\\\jayde\\\\Desktop\\\\Websites\\\\SBW\\\\logo.jpg\")",
+      "Bash(Select-Object Name, Length)",
+      "Bash(python -c \"from PIL import Image; print\\('Pillow OK'\\)\")",
+      "Bash(python *)",
+      "PowerShell($cmds = 'py','python3','php','node'; foreach \\($c in $cmds\\) { $p = \\(Get-Command $c -ErrorAction SilentlyContinue\\).Source; if \\($p\\) { \"$c -> $p\" } })",
+      "Bash(node *)",
+      "Bash(curl *)"
     ]
   }
 }
