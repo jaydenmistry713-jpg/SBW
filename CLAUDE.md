@@ -60,7 +60,7 @@ No environment variables required — the Elfsight widget is a client-side CDN e
 ## File Structure (complete build)
 ```
 /
-  index.html              — Homepage (hero slider, services, reviews) — CTA banner removed; .cta-banner still used on /blog/* articles
+  index.html              — Homepage (hero slider, services, reviews) — CTA banner removed. (.cta-banner CSS retained but no longer used anywhere — blog index and /blog/* articles had their CTA banners removed too)
   about.html              — About page (story, values, stats)
   services.html           — Services overview (4 cards)
   gallery.html            — Gallery (Supabase fetch, lightbox — no filters)
@@ -76,7 +76,8 @@ No environment variables required — the Elfsight widget is a client-side CDN e
     catering.html         — Menu selector (Buffet/Table Service, Menu 1/2)
   /blog/                  — Static article pages (hand-authored HTML, no CMS)
     5-reasons-to-have-a-wedding-coordinator.html
-    wedding-planning-timeline.html
+    weddings-and-celebrations-for-every-culture.html
+    questions-to-ask-before-booking-a-wedding-planner.html
     choosing-a-wedding-venue-in-scotland.html
     make-your-wedding-decor-your-own.html
     catering-for-a-large-guest-list.html
@@ -264,8 +265,8 @@ id uuid primary key, key text unique, value text, updated_at timestamptz
 - **Static, no CMS.** Every article is a hand-authored HTML file in `/blog/`. The index (`blog.html`) is a manually maintained `.blog-grid` of `.blog-card`s — when adding an article, create the `/blog/` file AND add a card to the index.
 - All blog pages reuse the standard site chrome (header/nav/footer) byte-identical to other pages, plus `/css/blog.css`. Articles also link `main.css`, `nav.css`, `cards.css`.
 - **Nav**: "Blog" is a top-level nav item between Gallery and Contact, and a footer Quick Links item, on **every** page. If the nav/footer changes, update all pages (index, about, services, gallery, contact, the 4 `/services/*`, blog.html, and all `/blog/*`).
-- Article layout: `.article` (max 760px) > `.article__meta` (tag/date/read-time) + `.article__lead` + `.article-body` (prose: h2/h3/p/ul/blockquote). Numbered tips use `.tip` > `.tip__num` + `.tip__body`. Footer `.article-footer` (back-to-blog) + shared `.cta-banner`.
-- First 5 articles are SEO-focused for "events company in Scotland" (coordinator tips, planning timeline, choosing a venue in Scotland, bespoke décor, catering at scale). Content is original and truthful to the business; South Asian heritage referenced sparingly per the brand direction.
+- Article layout: `.article` (max 760px) > `.article__meta` (tag/date/read-time) + `.article__lead` + `.article-body` (prose: h2/h3/p/ul/blockquote). Numbered tips use `.tip` > `.tip__num` + `.tip__body`. Footer is just `.article-footer` (back-to-blog) — the shared `.cta-banner` was removed from the blog index and all articles.
+- Six articles, SEO-focused for "events company in Scotland" (coordinator tips, questions to ask before booking a planner, choosing a venue in Scotland, bespoke décor, catering at scale, and an inclusive "celebrations for every culture" piece). The planning-timeline article was retired. Content is original and truthful to the business; South Asian heritage referenced sparingly per the brand direction.
 - Active-link highlighting: `main.js` won't mark "Blog" active on `/blog/*` article pages (same as Services on `/services/*`) — expected, consistent behaviour.
 
 ### Service Area / Coverage
