@@ -744,8 +744,11 @@
     var services = [];
     if (row.service_planning)   services.push('Event Planning');
     if (row.service_management) services.push('Event Management');
-    if (row.service_decor)      services.push('Bespoke Décor');
-    if (row.service_catering)   services.push('Catering');
+    if (row.service_decor_catering) {
+      if (row.decor_catering_package === 'food-decor') services.push('Food & Décor');
+      else if (row.decor_catering_package === 'decor-only') services.push('Décor Only');
+      else services.push('Décor / Catering');
+    }
 
     var metaHTML = '<span>' + escapeHtml(submittedStr) + '</span>';
     if (row.event_type) {
@@ -760,14 +763,18 @@
       ['Email',            row.email,            false],
       ['Event Date',       row.event_date,       false],
       ['Event Type',       row.event_type,       false],
+      ['Venue / Location',  row.venue_location,   false],
+      ['Number of Events', row.number_of_events, false],
       ['Services',         services.length ? services.join(', ') : null, false],
       ['Event Details',    row.event_details,    true],
       ['Menu Type',        row.menu_type,        false],
+      ['Preferred Menu',   row.menu_preference,  false],
       ['Dietary Notes',    row.dietary_notes,    true],
       ['Décor Theme',      row.decor_theme,      true],
       ['Venue Confirmed',  row.venue_confirmed,  false],
       ['Venue Name',       row.venue_name,       false],
       ['Guest Count',      row.guest_count,      false],
+      ['Budget',           row.budget,           false],
       ['Additional Notes', row.additional_notes, true]
     ];
 

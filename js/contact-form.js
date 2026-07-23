@@ -12,9 +12,10 @@
   var decorSection     = document.getElementById('decor-section');
   var planningSection  = document.getElementById('planning-section');
   var venueNameSection = document.getElementById('venue-name-section');
+  var decorCateringPackageSection = document.getElementById('decor-catering-package-section');
 
-  var cbCatering = document.getElementById('cb-catering');
-  var cbDecor    = document.getElementById('cb-decor');
+  var cbDecorCatering = document.getElementById('cb-decor-catering');
+  var decorCateringPackageSelect = document.getElementById('decor-catering-package');
   var cbPlanning = document.getElementById('cb-planning');
   var cbManagement = document.getElementById('cb-management');
   var venueYes   = document.getElementById('venue-yes');
@@ -24,7 +25,7 @@
 
   // Disable all inputs inside hidden conditional sections on load so they're
   // excluded from submission from the very first interaction.
-  [servicesSection, corporateSection, cateringSection, decorSection, planningSection, venueNameSection].forEach(function (section) {
+  [servicesSection, corporateSection, cateringSection, decorSection, planningSection, venueNameSection, decorCateringPackageSection].forEach(function (section) {
     if (!section) return;
     section.querySelectorAll('input, select, textarea').forEach(function (f) {
       f.disabled = true;
@@ -65,6 +66,7 @@
       hideSection(servicesSection);
       showSection(corporateSection);
       // When services section is hidden, also hide all service sub-sections
+      hideSection(decorCateringPackageSection);
       hideSection(cateringSection);
       hideSection(decorSection);
       hideSection(planningSection);
@@ -74,6 +76,7 @@
     } else {
       hideSection(servicesSection);
       hideSection(corporateSection);
+      hideSection(decorCateringPackageSection);
       hideSection(cateringSection);
       hideSection(decorSection);
       hideSection(planningSection);
@@ -83,9 +86,10 @@
   }
 
   function uncheckServiceBoxes() {
-    [cbCatering, cbDecor, cbPlanning, cbManagement].forEach(function (cb) {
+    [cbDecorCatering, cbPlanning, cbManagement].forEach(function (cb) {
       if (cb) cb.checked = false;
     });
+    if (decorCateringPackageSelect) decorCateringPackageSelect.value = '';
   }
 
   if (eventTypeSelect) {
@@ -93,22 +97,31 @@
   }
 
   // ─── Service checkbox logic ───────────────────────────────────────────────
-  if (cbCatering) {
-    cbCatering.addEventListener('change', function () {
-      if (cbCatering.checked) {
-        showSection(cateringSection);
+  if (cbDecorCatering) {
+    cbDecorCatering.addEventListener('change', function () {
+      if (cbDecorCatering.checked) {
+        showSection(decorCateringPackageSection);
       } else {
+        hideSection(decorCateringPackageSection);
+        hideSection(decorSection);
         hideSection(cateringSection);
+        if (decorCateringPackageSelect) decorCateringPackageSelect.value = '';
       }
     });
   }
 
-  if (cbDecor) {
-    cbDecor.addEventListener('change', function () {
-      if (cbDecor.checked) {
+  if (decorCateringPackageSelect) {
+    decorCateringPackageSelect.addEventListener('change', function () {
+      var val = decorCateringPackageSelect.value;
+      if (val === 'decor-only') {
         showSection(decorSection);
+        hideSection(cateringSection);
+      } else if (val === 'food-decor') {
+        showSection(decorSection);
+        showSection(cateringSection);
       } else {
         hideSection(decorSection);
+        hideSection(cateringSection);
       }
     });
   }
@@ -183,15 +196,24 @@
         break;
 
       case 'bespoke-decor':
-        if (cbDecor) {
-          cbDecor.checked = true;
+        if (cbDecorCatering) {
+          cbDecorCatering.checked = true;
+          showSection(decorCateringPackageSection);
+        }
+        if (decorCateringPackageSelect) {
+          decorCateringPackageSelect.value = 'decor-only';
           showSection(decorSection);
         }
         break;
 
       case 'catering':
-        if (cbCatering) {
-          cbCatering.checked = true;
+        if (cbDecorCatering) {
+          cbDecorCatering.checked = true;
+          showSection(decorCateringPackageSection);
+        }
+        if (decorCateringPackageSelect) {
+          decorCateringPackageSelect.value = 'food-decor';
+          showSection(decorSection);
           showSection(cateringSection);
         }
         break;
@@ -249,17 +271,21 @@
       email:              formData.get('email')              || null,
       event_date:         formData.get('event_date')         || null,
       event_type:         formData.get('event_type')         || null,
+      venue_location:     formData.get('venue_location')     || null,
+      number_of_events:   formData.get('number_of_events')   || null,
       service_planning:   !!formData.get('service_planning'),
       service_management: !!formData.get('service_management'),
-      service_decor:      !!formData.get('service_decor'),
-      service_catering:   !!formData.get('service_catering'),
+      service_decor_catering: !!formData.get('service_decor_catering'),
+      decor_catering_package: formData.get('decor_catering_package') || null,
       event_details:      formData.get('event_details')      || null,
       menu_type:          formData.get('menu_type')          || null,
+      menu_preference:    formData.get('menu_preference')    || null,
       dietary_notes:      formData.get('dietary_notes')      || null,
       decor_theme:        formData.get('decor_theme')        || null,
       venue_confirmed:    formData.get('venue_confirmed')    || null,
       venue_name:         formData.get('venue_name')         || null,
       guest_count:        formData.get('guest_count')        || null,
+      budget:             formData.get('budget')             || null,
       additional_notes:   formData.get('additional_notes')   || null
     }).then(function (result) {
       if (result.error) console.warn('Supabase enquiry save failed:', result.error);

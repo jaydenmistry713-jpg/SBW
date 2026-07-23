@@ -257,7 +257,7 @@ id uuid primary key, key text unique, value text, updated_at timestamptz
 ### SEO (sitemap, robots, structured data, social meta)
 - **`sitemap.xml`** lists all 15 public pages (excludes `/admin/`). **When you add or remove a page, update the sitemap.**
 - **`robots.txt`** allows everything except `/admin/` and references the sitemap.
-- **Structured data (JSON-LD)**: every public page carries a `LocalBusiness` block (name, `areaServed` = Scotland + North England, phone, email, logo, social `sameAs`). Each `/blog/*` article additionally carries a `BlogPosting` block (headline, description, hero image, `datePublished`/`dateModified`, publisher). Admin pages have none.
+- **Structured data (JSON-LD)**: every public page carries a `LocalBusiness` block (name, `areaServed` = Scotland, phone, email, logo, social `sameAs`). Each `/blog/*` article additionally carries a `BlogPosting` block (headline, description, hero image, `datePublished`/`dateModified`, publisher). Admin pages have none.
 - **Social meta**: every public page has `og:image`, `og:url`, `twitter:card` (summary) and `twitter:image`. **The image is the logo (`/logo.png`)** per client request. Note: a transparent-background logo can render with a plain/box background on some social platforms — if richer social previews are wanted later, swap to a dedicated 1200×630 banner and switch `twitter:card` to `summary_large_image`.
 - These were applied in bulk via a Node script (UTF-8 safe). New pages do NOT get them automatically — add the tags + JSON-LD when creating a page, or re-run the injection logic.
 
@@ -270,7 +270,7 @@ id uuid primary key, key text unique, value text, updated_at timestamptz
 - Active-link highlighting: `main.js` won't mark "Blog" active on `/blog/*` article pages (same as Services on `/services/*`) — expected, consistent behaviour.
 
 ### Service Area / Coverage
-- Stated on the contact page ("Where We Work" item): based in Scotland, covering the whole country (Glasgow, Edinburgh, the Central Belt and beyond) plus North England, with destination events on request. Footer tagline sitewide says "across Scotland and North England." **Confirm exact radius/named areas with the client** — current wording is a sensible default, not a precise mileage they specified.
+- Client removed North England as a service area (2026-07-23) — the business now states Scotland only. Stated on the contact page ("Where We Work" item): based in Scotland, covering the whole country (Glasgow, Edinburgh, the Central Belt and beyond), with destination events on request. Footer tagline sitewide says "across Scotland." All meta descriptions, JSON-LD `areaServed`, and body copy mentioning "North England" were removed sitewide (index, about, services, gallery, contact, all `/services/*`, blog.html, all `/blog/*`).
 
 ### About Page (about.html only)
 - Page-specific layout/timeline CSS lives in an inline `<style>` block in the `<head>` (established pattern for this page — `.about-story`, `.about-stats`, `.stat`, `.timeline`).
@@ -295,6 +295,9 @@ id uuid primary key, key text unique, value text, updated_at timestamptz
 - URL params: `?service=event-planning|event-management|bespoke-decor|catering` pre-fills form
 - **Conditional sections use `disabled` on hidden inputs** — `showSection()` enables all child inputs, `hideSection()` disables them. Disabled inputs are excluded from FormData entirely, so Netlify's email only shows fields the user actually filled in. All conditional sections are initialised as disabled on page load.
 - **Netlify form email body cannot be customised** — regardless of plan tier, Netlify's form notification emails have a fixed plain-text body. Only the subject line and recipient can be configured in the dashboard. To get HTML-designed emails in future, the path is: Netlify Function triggered by form submission → Outlook SMTP (`smtp.office365.com`, `SBWevents@outlook.com`) → custom HTML template.
+- **Décor/Catering is a single checkbox + dropdown** (`#cb-decor-catering` → reveals `#decor-catering-package-section` with a "Food & Décor" / "Décor Only" select, `name="decor_catering_package"`) — added 2026-07-23 because catering is never sold as a stand-alone service. Event Planning and Event Management remain separate checkboxes. The dropdown value drives which of `#decor-section` / `#catering-section` show, mirroring the old separate-checkbox behaviour.
+- **General fields added 2026-07-23**: `venue_location` (free text, always visible, next to Event Type), `number_of_events` (select 1/2/3/4+, for people enquiring about multiple functions), `menu_preference` (optional Menu 1/Menu 2 select inside the catering sub-section, distinct from the existing Buffet/Table Service `menu_type` radio), `budget` (free text, placed near the end of the form before Additional Notes).
+- **Supabase `enquiries` table**: the columns above (`venue_location`, `number_of_events`, `menu_preference`, `budget`, `service_decor_catering`, `decor_catering_package`) are written by `contact-form.js` but have not yet been added to the Supabase table — add them (or the Supabase insert will just log a console warning; Netlify Forms submission is unaffected since it doesn't depend on the DB schema).
 
 ### Gallery (gallery.html only)
 - Static fallback images in HTML; Supabase replaces on load if configured

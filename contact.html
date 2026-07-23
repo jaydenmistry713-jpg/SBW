@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Contact Us | SBW Events — Enquire About Your Event</title>
-  <meta name="description" content="Get in touch with SBW Events to enquire about event planning, décor, catering, and management across Scotland and North England.">
+  <meta name="description" content="Get in touch with SBW Events to enquire about event planning, décor, catering, and management across Scotland.">
   <link rel="canonical" href="https://sbwevents.co.uk/contact.html">
   <meta property="og:image" content="https://sbwevents.co.uk/logo.png">
   <meta property="og:url" content="https://sbwevents.co.uk/contact.html">
@@ -22,15 +22,14 @@
   "@type": "LocalBusiness",
   "name": "SBW Events",
   "alternateName": "Shadi Biyah Wale",
-  "description": "Family-run weddings and events specialists based in Scotland, serving the whole country and North England.",
+  "description": "Family-run weddings and events specialists based in Scotland, serving the whole country.",
   "url": "https://sbwevents.co.uk/",
   "logo": "https://sbwevents.co.uk/logo.png",
   "image": "https://sbwevents.co.uk/logo.png",
   "telephone": "+447831322188",
   "email": "SBWevents@outlook.com",
   "areaServed": [
-    "Scotland",
-    "North England"
+    "Scotland"
   ],
   "address": {
     "@type": "PostalAddress",
@@ -147,7 +146,7 @@
               </div>
               <div class="contact-info-item__body">
                 <p class="contact-info-item__label">Where We Work</p>
-                <p class="contact-info-item__value">Based in Scotland, covering the whole country — Glasgow, Edinburgh, the Central Belt and beyond — as well as North England. Destination events further afield on request.</p>
+                <p class="contact-info-item__value">Based in Scotland, covering the whole country — Glasgow, Edinburgh, the Central Belt and beyond. Destination events further afield on request.</p>
               </div>
             </div>
 
@@ -219,6 +218,24 @@
                 </select>
               </div>
 
+              <!-- Venue/Location & Number of Events -->
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="venue-location">Venue / Location</label>
+                  <input type="text" id="venue-location" name="venue_location" class="form-control" placeholder="e.g. Glasgow, or leave blank if not yet decided">
+                </div>
+                <div class="form-group">
+                  <label for="number-of-events">Number of Events</label>
+                  <select id="number-of-events" name="number_of_events" class="form-control">
+                    <option value="">— Select —</option>
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4+">4+</option>
+                  </select>
+                </div>
+              </div>
+
               <!-- CONDITIONAL: Services (wedding events) -->
               <div class="conditional-section" id="services-section">
                 <p class="conditional-section__title">Services Required</p>
@@ -232,13 +249,22 @@
                     <span class="checkbox-item__label">Event Management (On-the-day)<small>Dedicated on-site team for the day itself</small></span>
                   </label>
                   <label class="checkbox-item">
-                    <input type="checkbox" name="service_decor" value="yes" id="cb-decor">
-                    <span class="checkbox-item__label">Bespoke Décor<small>Custom theme and décor design</small></span>
+                    <input type="checkbox" name="service_decor_catering" value="yes" id="cb-decor-catering">
+                    <span class="checkbox-item__label">Décor / Catering<small>Bespoke décor, with catering available alongside it</small></span>
                   </label>
-                  <label class="checkbox-item">
-                    <input type="checkbox" name="service_catering" value="yes" id="cb-catering">
-                    <span class="checkbox-item__label">Catering<small>Halal buffet or table service menu</small></span>
-                  </label>
+                </div>
+              </div>
+
+              <!-- CONDITIONAL: Décor/Catering package dropdown -->
+              <div class="conditional-section" id="decor-catering-package-section">
+                <div class="form-group">
+                  <label for="decor-catering-package">Which would you like?</label>
+                  <select id="decor-catering-package" name="decor_catering_package" class="form-control">
+                    <option value="">— Select an option —</option>
+                    <option value="food-decor">Food &amp; Décor</option>
+                    <option value="decor-only">Décor Only</option>
+                  </select>
+                  <small class="form-hint">We offer catering alongside décor, not as a stand-alone service.</small>
                 </div>
               </div>
 
@@ -266,6 +292,14 @@
                       <span class="radio-item__label">Table Service</span>
                     </label>
                   </div>
+                </div>
+                <div class="form-group">
+                  <label for="menu-preference">Preferred Menu (if known)</label>
+                  <select id="menu-preference" name="menu_preference" class="form-control">
+                    <option value="">— Not decided yet —</option>
+                    <option value="menu-1">Menu 1</option>
+                    <option value="menu-2">Menu 2</option>
+                  </select>
                 </div>
                 <div class="form-group">
                   <label for="dietary-notes">Dietary Requirements or Notes</label>
@@ -312,6 +346,12 @@
                 <input type="number" id="guest-count" name="guest_count" class="form-control" placeholder="e.g. 150" min="1">
               </div>
 
+              <!-- Budget -->
+              <div class="form-group">
+                <label for="budget">Approximate Budget (optional)</label>
+                <input type="text" id="budget" name="budget" class="form-control" placeholder="e.g. £5,000 - £8,000, or leave blank if unsure">
+              </div>
+
               <!-- Additional notes -->
               <div class="form-group">
                 <label for="notes">Additional Notes (optional)</label>
@@ -338,7 +378,7 @@
       <div class="footer-grid">
         <div class="footer-brand">
           <p class="footer-logo">SBW <span class="logo-accent">Events</span></p>
-          <p class="footer-tagline">Bespoke weddings, celebrations &amp; events across Scotland and North England.</p>
+          <p class="footer-tagline">Bespoke weddings, celebrations &amp; events across Scotland.</p>
           <div class="footer-social">
             <a href="https://instagram.com/shadibiyahwale" target="_blank" rel="noopener" aria-label="Instagram"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg></a>
             <a href="https://tiktok.com/@shadibiyahwale" target="_blank" rel="noopener" aria-label="TikTok"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.34 6.34 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V8.69a8.27 8.27 0 004.84 1.55V6.79a4.85 4.85 0 01-1.07-.1z"/></svg></a>
@@ -369,6 +409,7 @@
           <p><a href="tel:+447831322188">+44 7831 322188</a></p>
           <p><a href="mailto:SBWevents@outlook.com">SBWevents@outlook.com</a></p>
           <p><a href="mailto:shadibiyahwale@outlook.com">shadibiyahwale@outlook.com</a></p>
+          <p><a href="https://instagram.com/shadibiyahwale" target="_blank" rel="noopener">@shadibiyahwale on Instagram</a></p>
           <a href="/contact.html" class="btn btn--gold" style="margin-top: 1.25rem; display: inline-block;">Enquire Now</a>
         </div>
       </div>
