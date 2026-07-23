@@ -321,6 +321,7 @@ id uuid primary key, key text unique, value text, updated_at timestamptz
 - `admin.js` detects current page by checking for key element IDs
 - **Menus manager** (`/admin/menus.html`): groups items by `course_name`; supports add/remove items per course, add/remove courses, and a "Seed default menus" button for first-time setup. Save uses delete+reinsert for the full type+number combo.
 - **Enquiries viewer** (`/admin/enquiries.html`): reads from the `enquiries` Supabase table (populated by `contact-form.js` on every submission). Lists submissions as tap-to-expand cards (name, submitted date, event type badge, event date in header; all form fields in the body). Enquiries is the first nav item in the sidebar (most frequent use).
+  - **Archive / Delete (added 2026-07-23):** every card has an "Archive" (or "Restore", if already archived) and a "Delete" button in the header — both use `e.stopPropagation()` so they don't also trigger the card's expand/collapse. "Active" / "Archived" filter tabs sit above the list, each showing a live count; default view is Active. All rows are fetched once into a module-level `allEnquiries` array and filtered/re-rendered client-side on tab switch (no re-fetch), so archiving/deleting updates that in-memory array rather than re-querying Supabase. Delete is permanent (`confirm()` before calling) — there's no undo. Requires an `archived boolean not null default false` column on `public.enquiries` (added via SQL Editor, not a code migration).
 
 ---
 

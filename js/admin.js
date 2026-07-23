@@ -690,7 +690,19 @@
   // ---------------------------------------------------------------------------
   // ENQUIRIES MANAGER
   // ---------------------------------------------------------------------------
+  var allEnquiries = [];
+  var enquiriesFilter = 'active';
+
   function initEnquiries() {
+    document.querySelectorAll('.enquiries-filter-tab').forEach(function (tab) {
+      tab.addEventListener('click', function () {
+        enquiriesFilter = tab.dataset.filter;
+        document.querySelectorAll('.enquiries-filter-tab').forEach(function (t) {
+          t.classList.toggle('is-active', t === tab);
+        });
+        renderEnquiries();
+      });
+    });
     fetchEnquiries();
   }
 
@@ -707,23 +719,41 @@
         .order('created_at', { ascending: false });
 
       if (result.error) throw result.error;
-      renderEnquiries(result.data || []);
+      allEnquiries = result.data || [];
+      renderEnquiries();
     } catch (err) {
       console.error('Failed to fetch enquiries:', err);
       list.innerHTML = '<div class="admin-alert admin-alert--error is-visible" style="margin:0;">' + escapeHtml(err.message || 'Failed to load enquiries.') + '</div>';
     }
   }
 
-  function renderEnquiries(rows) {
+  function updateFilterTabCounts() {
+    var activeCount = allEnquiries.filter(function (r) { return !r.archived; }).length;
+    var archivedCount = allEnquiries.filter(function (r) { return r.archived; }).length;
+    var activeTab = document.querySelector('.enquiries-filter-tab[data-filter="active"]');
+    var archivedTab = document.querySelector('.enquiries-filter-tab[data-filter="archived"]');
+    if (activeTab) activeTab.textContent = 'Active (' + activeCount + ')';
+    if (archivedTab) archivedTab.textContent = 'Archived (' + archivedCount + ')';
+  }
+
+  function renderEnquiries() {
     var list = document.getElementById('enquiries-list');
     if (!list) return;
 
+    updateFilterTabCounts();
+
+    var rows = allEnquiries.filter(function (r) {
+      return enquiriesFilter === 'archived' ? !!r.archived : !r.archived;
+    });
+
     if (!rows.length) {
-      list.innerHTML = '<p class="enquiries-empty">No enquiries received yet.</p>';
+      list.innerHTML = '<p class="enquiries-empty">'
+        + (enquiriesFilter === 'archived' ? 'No archived enquiries.' : 'No active enquiries.')
+        + '</p>';
       return;
     }
 
-    var countText = rows.length + ' enquir' + (rows.length === 1 ? 'y' : 'ies') + ' received';
+    var countText = rows.length + ' enquir' + (rows.length === 1 ? 'y' : 'ies');
     list.innerHTML = '<p class="enquiries-count">' + countText + '</p>'
       + rows.map(buildEnquiryCardHTML).join('');
 
@@ -732,6 +762,68 @@
         header.closest('.enquiry-card').classList.toggle('is-open');
       });
     });
+    list.querySelectorAll('.enquiry-archive-btn').forEach(function (btn) {
+      btn.addEventListener('click', handleEnquiryArchiveToggle);
+    });
+    list.querySelectorAll('.enquiry-delete-btn').forEach(function (btn) {
+      btn.addEventListener('click', handleEnquiryDelete);
+    });
+  }
+
+  async function handleEnquiryArchiveToggle(e) {
+    e.stopPropagation();
+    var btn = e.currentTarget;
+    var id = btn.dataset.id;
+    var nextArchived = btn.dataset.archived !== 'true';
+
+    btn.disabled = true;
+
+    try {
+      var result = await supabaseClient
+        .from('enquiries')
+        .update({ archived: nextArchived })
+        .eq('id', id);
+      if (result.error) throw result.error;
+
+      var row = allEnquiries.find(function (r) { return String(r.id) === String(id); });
+      if (row) row.archived = nextArchived;
+
+      showAlert('success', nextArchived ? 'Enquiry archived.' : 'Enquiry restored to active.');
+      renderEnquiries();
+    } catch (err) {
+      console.error('Failed to update enquiry:', err);
+      showAlert('error', 'Failed to update enquiry: ' + (err.message || 'Unknown error'));
+      btn.disabled = false;
+    }
+  }
+
+  async function handleEnquiryDelete(e) {
+    e.stopPropagation();
+    var btn = e.currentTarget;
+    var id = btn.dataset.id;
+
+    if (!confirm('Delete this enquiry permanently? This cannot be undone.')) return;
+
+    btn.disabled = true;
+    btn.textContent = 'Deleting…';
+
+    try {
+      var result = await supabaseClient
+        .from('enquiries')
+        .delete()
+        .eq('id', id);
+      if (result.error) throw result.error;
+
+      allEnquiries = allEnquiries.filter(function (r) { return String(r.id) !== String(id); });
+
+      showAlert('success', 'Enquiry deleted.');
+      renderEnquiries();
+    } catch (err) {
+      console.error('Failed to delete enquiry:', err);
+      showAlert('error', 'Failed to delete enquiry: ' + (err.message || 'Unknown error'));
+      btn.disabled = false;
+      btn.textContent = 'Delete';
+    }
   }
 
   function buildEnquiryCardHTML(row) {
@@ -789,11 +881,17 @@
       })
       .join('');
 
-    return '<div class="enquiry-card">'
+    var archived = !!row.archived;
+
+    return '<div class="enquiry-card' + (archived ? ' is-archived' : '') + '">'
       + '<div class="enquiry-card__header">'
       + '<div class="enquiry-card__info">'
       + '<div class="enquiry-card__name">' + escapeHtml(row.full_name || 'Unknown') + '</div>'
       + '<div class="enquiry-card__meta">' + metaHTML + '</div>'
+      + '</div>'
+      + '<div class="enquiry-card__actions">'
+      + '<button class="enquiry-card__action-btn enquiry-archive-btn" data-id="' + escapeHtml(String(row.id)) + '" data-archived="' + archived + '">' + (archived ? 'Restore' : 'Archive') + '</button>'
+      + '<button class="enquiry-card__action-btn enquiry-card__action-btn--delete enquiry-delete-btn" data-id="' + escapeHtml(String(row.id)) + '">Delete</button>'
       + '</div>'
       + '<svg class="enquiry-card__chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6,9 12,15 18,9"/></svg>'
       + '</div>'
