@@ -35,17 +35,17 @@ Per the CSS spec, those properties turn the element into a new containing block 
 
 ---
 
-## Tech Stack — STRICTLY HTML, CSS, VANILLA JAVASCRIPT ONLY (site itself)
+## Tech Stack — STRICTLY HTML, CSS, VANILLA JAVASCRIPT ONLY
 - No frameworks (no React, Vue, Next.js, Angular, Svelte)
 - No CSS frameworks (no Tailwind, Bootstrap)
 - No jQuery
-- No build tools, no bundlers, no npm, no package.json **for the site**
+- No build tools, no bundlers, no npm, no package.json
 - Plain HTML5, CSS3, vanilla JavaScript (ES6+) in IIFEs
 - Hosting: Netlify (static site)
 - Database/CMS: Supabase JS SDK loaded via CDN
-- Forms: Netlify Forms (zero email backend code) + a Netlify Function for the custom HTML notification email (see below)
+- Forms: Netlify Forms (zero email backend code)
 - Reviews: **Elfsight Google Reviews widget** (CDN embed — no server-side code, no API key needed)
-- **Netlify plan: Pro** — Functions are in use (`/netlify/functions/notify-enquiry.js`, added 2026-07-23). This is the one accepted exception to "no npm/package.json": `/netlify/functions/package.json` declares `nodemailer` as a dependency, scoped only to the functions directory — the static site itself still has zero build step.
+- **Netlify plan: Pro** — Functions are available if ever needed (not currently used; `/netlify/functions/reviews.js` was removed when switching to Elfsight)
 
 ## Local Development
 **Files use root-relative paths — they MUST be served from a local server, not opened directly.**
@@ -68,10 +68,7 @@ No environment variables required — the Elfsight widget is a client-side CDN e
   blog.html               — Blog index (static card grid linking to /blog/ articles)
   sitemap.xml             — SEO sitemap (all 15 public pages; update when adding/removing pages)
   robots.txt             — Allows all, disallows /admin/, points to sitemap.xml
-  netlify.toml            — Netlify build/redirect/header config (also sets `functions = "netlify/functions"`)
-  /netlify/functions/
-    notify-enquiry.js      — Sends the custom HTML "New Enquiry" email via Outlook SMTP (nodemailer), called directly by contact-form.js after a successful submission
-    package.json           — Declares `nodemailer` dependency; scoped to this folder only, not the site
+  netlify.toml            — Netlify build/redirect/header config
   /services/
     event-planning.html
     event-management.html
@@ -297,8 +294,7 @@ id uuid primary key, key text unique, value text, updated_at timestamptz
 - Thank-you div `#form-thankyou` shown on success; form hidden
 - URL params: `?service=event-planning|event-management|bespoke-decor|catering` pre-checks the matching service checkbox (and, for décor/catering, the package dropdown) — no longer touches Event Type, since Services Required is always visible
 - **Conditional sections use `disabled` on hidden inputs** — `showSection()` enables all child inputs, `hideSection()` disables them. Disabled inputs are excluded from FormData entirely, so Netlify's email only shows fields the user actually filled in. All conditional sections are initialised as disabled on page load — **except** `#services-section` ("Services Required") and `#planning-section` ("Venue Details"), which carry `is-visible` directly in the HTML and are excluded from the disable-on-load loop, so they always show and their inputs are always enabled, regardless of Event Type or navigation path (fixed 2026-07-23 — previously they only appeared for wedding-type Event Types or via a `?service=` link from the services pages). `handleEventTypeChange()` now only toggles `#corporate-section`; it no longer touches Services Required or Venue Details.
-- **Netlify's own form notification email has a fixed plain-text body** — only the subject/recipient are configurable in the dashboard, so a custom HTML notification (added 2026-07-23) is sent separately: after the Netlify `fetch('/')` submit succeeds, `contact-form.js`'s `sendEnquiryNotification()` POSTs the non-empty form fields as JSON to `/.netlify/functions/notify-enquiry`, which emails a branded HTML summary (services rolled up into one line, all filled fields, a "View in Admin Panel" button linking to `https://sbweventslive.netlify.app/admin/`) via Outlook SMTP (`smtp.office365.com`) using nodemailer. Requires `OUTLOOK_SMTP_USER` and `OUTLOOK_SMTP_PASS` env vars set in the Netlify dashboard (Site settings → Environment variables) — not committed to the repo. **The old Netlify dashboard email notification for the `enquiry` form should be disabled/deleted once this is confirmed working, to avoid duplicate emails per enquiry** — this is a manual dashboard step, not something set via code.
-- The admin panel link in the notification email is hardcoded to `https://sbweventslive.netlify.app/admin/` (temporary Netlify subdomain) — update `ADMIN_URL` in `notify-enquiry.js` if/when the site moves to the final `sbwevents.co.uk` domain.
+- **Netlify form email body cannot be customised** — regardless of plan tier, Netlify's form notification emails have a fixed plain-text body. Only the subject line and recipient can be configured in the dashboard. To get HTML-designed emails in future, the path is: Netlify Function triggered by form submission → Outlook SMTP (`smtp.office365.com`, `SBWevents@outlook.com`) → custom HTML template.
 - **Décor/Catering is a single checkbox + dropdown** (`#cb-decor-catering` → reveals `#decor-catering-package-section` with a "Food & Décor" / "Décor Only" select, `name="decor_catering_package"`) — added 2026-07-23 because catering is never sold as a stand-alone service. Event Planning and Event Management remain separate checkboxes. The dropdown value drives which of `#decor-section` / `#catering-section` show, mirroring the old separate-checkbox behaviour.
 - **General fields added 2026-07-23**: `venue_location` (free text, always visible, next to Event Type), `number_of_events` (select 1/2/3/4+, for people enquiring about multiple functions), `menu_preference` (optional Menu 1/Menu 2 select inside the catering sub-section, distinct from the existing Buffet/Table Service `menu_type` radio), `budget` (free text, placed near the end of the form before Additional Notes).
 - **Supabase `enquiries` table**: the columns above (`venue_location`, `number_of_events`, `menu_preference`, `budget`, `service_decor_catering`, `decor_catering_package`) are written by `contact-form.js` but have not yet been added to the Supabase table — add them (or the Supabase insert will just log a console warning; Netlify Forms submission is unaffected since it doesn't depend on the DB schema).
@@ -331,20 +327,17 @@ id uuid primary key, key text unique, value text, updated_at timestamptz
 ```toml
 [build]
   publish = "/"
-  functions = "netlify/functions"
+
+[[redirects]]
+  from = "/admin/*"
+  to = "/admin/index.html"
+  status = 200
 
 [[headers]]
   for = "/*"
   [headers.values]
     X-Frame-Options = "DENY"
     X-Content-Type-Options = "nosniff"
-    Referrer-Policy = "strict-origin-when-cross-origin"
-    Permissions-Policy = "camera=(), microphone=(), geolocation=()"
-
-[[headers]]
-  for = "/admin/*"
-  [headers.values]
-    X-Robots-Tag = "noindex, nofollow"
 ```
 
 ---
@@ -353,8 +346,8 @@ id uuid primary key, key text unique, value text, updated_at timestamptz
 - Do not use React, Vue, Next.js, Svelte, or any JS framework
 - Do not use Tailwind, Bootstrap, or any CSS framework
 - Do not use jQuery or any JS library except Supabase SDK (CDN)
-- Do not use Node.js, Express, or any server-side runtime **for the site itself** — the one exception is `/netlify/functions/notify-enquiry.js`, a Netlify Function (see Contact Form notes)
-- Netlify Forms still handles the actual form capture/spam-filtering/email routing; `notify-enquiry.js` only sends the *additional* branded HTML notification — don't duplicate that plumbing elsewhere
+- Do not use Node.js, Express, or any server-side runtime
+- Do not write any email sending code — Netlify Forms handles this
 - Do not use inline styles except for truly dynamic JS-set values
-- Do not add npm, yarn, package.json, or any build step **to the site root or any page-serving directory** — `/netlify/functions/package.json` is the sole exception, scoped to Functions only
+- Do not add npm, yarn, package.json, or any build step
 - Do not open HTML files directly in the browser — serve via local server

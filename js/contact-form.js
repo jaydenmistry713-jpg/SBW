@@ -198,7 +198,6 @@
         throw new Error('Network response was not ok');
       }
       saveEnquiryToSupabase(formData);
-      sendEnquiryNotification(formData);
       showThankyou();
     })
     .catch(function () {
@@ -209,23 +208,6 @@
       form.submit();
     });
   });
-
-  // Sends the custom HTML "New Enquiry" email via the notify-enquiry
-  // Netlify Function, in addition to Netlify's own form submission above.
-  function sendEnquiryNotification(formData) {
-    var payload = {};
-    formData.forEach(function (value, key) {
-      if (typeof value === 'string' && value.trim() === '') return;
-      payload[key] = value;
-    });
-    fetch('/.netlify/functions/notify-enquiry', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    }).catch(function (err) {
-      console.warn('Enquiry notification email failed to send:', err);
-    });
-  }
 
   function saveEnquiryToSupabase(formData) {
     if (!window.supabaseClient) return;
