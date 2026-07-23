@@ -6,11 +6,9 @@
   var thankyou        = document.getElementById('form-thankyou');
   var eventTypeSelect = document.getElementById('event-type');
 
-  var servicesSection  = document.getElementById('services-section');
   var corporateSection = document.getElementById('corporate-section');
   var cateringSection  = document.getElementById('catering-section');
   var decorSection     = document.getElementById('decor-section');
-  var planningSection  = document.getElementById('planning-section');
   var venueNameSection = document.getElementById('venue-name-section');
   var decorCateringPackageSection = document.getElementById('decor-catering-package-section');
 
@@ -24,8 +22,9 @@
   if (!form) return;
 
   // Disable all inputs inside hidden conditional sections on load so they're
-  // excluded from submission from the very first interaction.
-  [servicesSection, corporateSection, cateringSection, decorSection, planningSection, venueNameSection, decorCateringPackageSection].forEach(function (section) {
+  // excluded from submission from the very first interaction. Services
+  // Required and Venue Details are always visible, so they're excluded here.
+  [corporateSection, cateringSection, decorSection, venueNameSection, decorCateringPackageSection].forEach(function (section) {
     if (!section) return;
     section.querySelectorAll('input, select, textarea').forEach(function (f) {
       f.disabled = true;
@@ -52,44 +51,19 @@
   }
 
   // ─── Event type logic ─────────────────────────────────────────────────────
-  var weddingTypes = ['engagement', 'nikkah', 'mehndi', 'wedding'];
-  var otherTypes   = ['corporate', 'other'];
+  // Services Required and Venue Details are always visible regardless of
+  // event type — only the corporate/other free-text section is conditional.
+  var otherTypes = ['corporate', 'other'];
 
   function handleEventTypeChange() {
     if (!eventTypeSelect) return;
     var val = eventTypeSelect.value;
 
-    if (weddingTypes.indexOf(val) !== -1) {
-      showSection(servicesSection);
-      hideSection(corporateSection);
-    } else if (otherTypes.indexOf(val) !== -1) {
-      hideSection(servicesSection);
+    if (otherTypes.indexOf(val) !== -1) {
       showSection(corporateSection);
-      // When services section is hidden, also hide all service sub-sections
-      hideSection(decorCateringPackageSection);
-      hideSection(cateringSection);
-      hideSection(decorSection);
-      hideSection(planningSection);
-      hideSection(venueNameSection);
-      // Uncheck service checkboxes so data isn't submitted unexpectedly
-      uncheckServiceBoxes();
     } else {
-      hideSection(servicesSection);
       hideSection(corporateSection);
-      hideSection(decorCateringPackageSection);
-      hideSection(cateringSection);
-      hideSection(decorSection);
-      hideSection(planningSection);
-      hideSection(venueNameSection);
-      uncheckServiceBoxes();
     }
-  }
-
-  function uncheckServiceBoxes() {
-    [cbDecorCatering, cbPlanning, cbManagement].forEach(function (cb) {
-      if (cb) cb.checked = false;
-    });
-    if (decorCateringPackageSelect) decorCateringPackageSelect.value = '';
   }
 
   if (eventTypeSelect) {
@@ -126,20 +100,6 @@
     });
   }
 
-  if (cbPlanning) {
-    cbPlanning.addEventListener('change', function () {
-      if (cbPlanning.checked) {
-        showSection(planningSection);
-      } else {
-        hideSection(planningSection);
-        hideSection(venueNameSection);
-        // Reset venue radio buttons
-        var venueRadios = document.querySelectorAll('input[name="venue_confirmed"]');
-        venueRadios.forEach(function (r) { r.checked = false; });
-      }
-    });
-  }
-
   // ─── Venue confirmed radio logic ──────────────────────────────────────────
   function initVenueRadios() {
     var venueRadios = document.querySelectorAll('input[name="venue_confirmed"]');
@@ -168,24 +128,10 @@
     var service = params.get('service');
     if (!service) return;
 
-    // All service params require showing the services section, so set event
-    // type to 'wedding' (most common) only if it hasn't been set already.
-    if (eventTypeSelect && !eventTypeSelect.value) {
-      eventTypeSelect.value = 'wedding';
-      handleEventTypeChange();
-    } else if (eventTypeSelect && weddingTypes.indexOf(eventTypeSelect.value) === -1) {
-      // Current value is not a wedding type — override to wedding
-      eventTypeSelect.value = 'wedding';
-      handleEventTypeChange();
-    }
-
-    showSection(servicesSection);
-
     switch (service) {
       case 'event-planning':
         if (cbPlanning) {
           cbPlanning.checked = true;
-          showSection(planningSection);
         }
         break;
 
