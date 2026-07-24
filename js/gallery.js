@@ -75,6 +75,7 @@
     // Re-bind events after dynamic insertion
     bindGalleryItems();
     refreshVisibleItems();
+    applyPagination();
   }
 
   var GRID_THUMB_WIDTH = 900;
@@ -100,7 +101,6 @@
     img.alt = alt;
     img.loading = 'lazy';
     img.src = toCdnUrl(src, GRID_THUMB_WIDTH);
-    withCdnFallback(img, src);
     div.insertBefore(img, div.firstChild);
 
     return div;
@@ -214,6 +214,13 @@
           if (idx !== -1) openLightbox(idx);
         }
       });
+
+      // cloneNode() above drops JS-attached listeners, so the CDN-fallback
+      // error handler has to be re-attached to the (new) img on every bind,
+      // not just once at creation.
+      var img = item.querySelector('img');
+      var originalSrc = item.getAttribute('data-src');
+      if (img && originalSrc) withCdnFallback(img, originalSrc);
     });
   }
 
@@ -278,17 +285,33 @@
     if (countEl) countEl.textContent = 'Showing ' + shown + ' of ' + total + ' photos';
   }
 
+  // Resets which items are deferred based on their current DOM position —
+  // must be re-run whenever the grid is fully rebuilt (e.g. after the
+  // Supabase fetch replaces the static markup), since freshly-created items
+  // never carry the .is-deferred class the static HTML hand-authors.
+  function applyPagination() {
+    var items = Array.prototype.slice.call(grid.querySelectorAll('.gallery-item'));
+    items.forEach(function (item, idx) {
+      if (idx < BATCH_SIZE) {
+        item.classList.remove('is-deferred');
+      } else {
+        item.classList.add('is-deferred');
+      }
+    });
+
+    updateCount();
+
+    var btn = document.getElementById('gallery-load-more');
+    if (!btn) return;
+    var remaining = grid.querySelectorAll('.gallery-item.is-deferred');
+    btn.style.display = remaining.length === 0 ? 'none' : '';
+  }
+
   function initLoadMore() {
     var btn = document.getElementById('gallery-load-more');
     if (!btn) return;
 
-    updateCount();
-
-    var remaining = grid.querySelectorAll('.gallery-item.is-deferred');
-    if (remaining.length === 0) {
-      btn.style.display = 'none';
-      return;
-    }
+    applyPagination();
 
     btn.addEventListener('click', function () {
       var deferred = Array.prototype.slice.call(
