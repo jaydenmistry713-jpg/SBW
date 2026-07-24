@@ -172,6 +172,13 @@ Never hardcode hex values in component CSS — always use variables.
 - URL-encode spaces in `src` attributes: space → `%20`, e.g. `/images/web/IMG_6084%20Sumayyah.jpeg`
 - Names contain spaces, `&`, `(` `)` — always URL-encode when writing src attributes manually
 
+### CMS-uploaded images (Supabase Storage) — egress control (added 2026-07-24)
+Client uploads via `/admin/gallery.html` are never assumed to be pre-compressed (client uploads straight from phone/camera). Two independent layers keep Supabase Storage egress from scaling with either upload size or site traffic:
+1. **Upload-time compression** — `js/admin.js` `compressImage()` runs every file through a canvas resize/re-encode (max 2000px longest edge, JPEG quality 0.82 — same targets as the static Pillow pipeline above) before it reaches `uploadFiles()`. Output is always `.jpg`. Falls back to uploading the original file if canvas decode/export fails (e.g. an undecodable format), so a bad file never blocks the upload.
+2. **Netlify Image CDN proxy on serve** — `js/gallery.js` `toCdnUrl()` rewrites any `<img>`/lightbox `src` that points at the Supabase Storage public URL (prefix hardcoded from `SUPABASE_URL` in `supabase-config.js`) to `/.netlify/images?url=...&w=...&q=80` (grid thumbs at `w=900`, lightbox at `w=1800`). Netlify's edge caches the transformed result, so repeat visitors are served from Netlify instead of hitting Supabase Storage again. Requires the `[images].remote_images` allowlist entry in `netlify.toml` matching the Supabase storage URL prefix — update both if the Supabase project URL ever changes. `withCdnFallback()` swaps back to the raw Supabase URL on image load error (covers local dev via `python -m http.server`, where `/.netlify/images` doesn't exist — only live Netlify deploys or `netlify dev` serve it).
+- Static `/images/web/*` images are untouched by either layer — they're already compressed and served directly by Netlify, not Supabase, so they aren't an egress concern.
+- **Not yet done**: the images currently hardcoded into HTML (hero slider, Recent Work grid, static gallery fallback) still live in `/images/web/` rather than the `gallery_images` CMS table — migrating them into Supabase Storage is planned as a separate follow-up, deliberately after this compression/proxy work so they land in Storage already small and cache-proxied instead of needing a second pass.
+
 ---
 
 ## Before Go-Live Checklist
@@ -303,6 +310,7 @@ id uuid primary key, key text unique, value text, updated_at timestamptz
 
 ### Gallery (gallery.html only)
 - Static fallback images in HTML; Supabase replaces on load if configured
+- Supabase-sourced images (grid thumbs + lightbox) are served through the Netlify Image CDN proxy, not directly from Supabase Storage — see [CMS-uploaded images (Supabase Storage) — egress control](#images) above.
 - No filter buttons — all images shown, visual-first layout
 - Grid: editorial CSS Grid with `nth-child` column spans for varied shapes (no row spans — avoids dense-flow complexity). Pattern: mobile 2-col every-3rd full-width; 640px 3-col every-2nd spans 2; 1024px 4-col every-3rd spans 2. Row heights set via `grid-auto-rows` per breakpoint.
 - Lightbox: `#lightbox` with prev/next/close/Escape/overlay-click

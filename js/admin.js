@@ -264,6 +264,65 @@
     }
   }
 
+  // Max dimension and JPEG quality mirror the site's static image pipeline
+  // (see CLAUDE.md: Pillow pipeline, max 2000px, quality 82) so CMS uploads
+  // land in Supabase Storage already web-sized, regardless of what the
+  // client's phone/camera originally produced.
+  const UPLOAD_MAX_DIMENSION = 2000;
+  const UPLOAD_JPEG_QUALITY = 0.82;
+
+  function compressImage(file) {
+    return new Promise(function (resolve) {
+      const objectUrl = URL.createObjectURL(file);
+      const img = new Image();
+
+      img.onload = function () {
+        URL.revokeObjectURL(objectUrl);
+
+        let width = img.naturalWidth;
+        let height = img.naturalHeight;
+
+        if (!width || !height) {
+          resolve(file); // couldn't read dimensions, upload original
+          return;
+        }
+
+        if (width > UPLOAD_MAX_DIMENSION || height > UPLOAD_MAX_DIMENSION) {
+          if (width >= height) {
+            height = Math.round(height * (UPLOAD_MAX_DIMENSION / width));
+            width = UPLOAD_MAX_DIMENSION;
+          } else {
+            width = Math.round(width * (UPLOAD_MAX_DIMENSION / height));
+            height = UPLOAD_MAX_DIMENSION;
+          }
+        }
+
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+
+        canvas.toBlob(function (blob) {
+          if (!blob) {
+            resolve(file); // canvas export failed, upload original
+            return;
+          }
+          const baseName = file.name.replace(/\.[^.]+$/, '');
+          resolve(new File([blob], baseName + '.jpg', { type: 'image/jpeg' }));
+        }, 'image/jpeg', UPLOAD_JPEG_QUALITY);
+      };
+
+      img.onerror = function () {
+        URL.revokeObjectURL(objectUrl);
+        resolve(file); // not a decodable image client-side, upload original
+      };
+
+      img.src = objectUrl;
+    });
+  }
+
   async function uploadFiles(files) {
     const uploadZone = document.getElementById('upload-zone');
     if (uploadZone) {
@@ -273,8 +332,10 @@
     let successCount = 0;
     let errorCount = 0;
 
-    for (const file of files) {
+    for (const rawFile of files) {
       try {
+        const file = await compressImage(rawFile);
+
         // Generate a unique file path
         const ext = file.name.split('.').pop().toLowerCase();
         const fileName = Date.now() + '_' + Math.random().toString(36).substr(2, 9) + '.' + ext;
@@ -309,7 +370,7 @@
 
         successCount++;
       } catch (err) {
-        console.error('Upload failed for', file.name, err);
+        console.error('Upload failed for', rawFile.name, err);
         errorCount++;
       }
     }

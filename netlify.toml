@@ -1,6 +1,9 @@
 [build]
   publish = "/"
 
+[images]
+  remote_images = ["^https://ryvmutpznmjphyghmqvu\\.supabase\\.co/storage/v1/object/public/.*"]
+
 [[headers]]
   for = "/*"
   [headers.values]

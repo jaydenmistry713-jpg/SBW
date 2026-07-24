@@ -5,6 +5,28 @@
   var currentIndex = 0;
   var visibleItems = [];
 
+  // ─── Netlify Image CDN proxy ─────────────────────────────────────────────
+  // Routes Supabase-storage image URLs through Netlify's Image CDN so repeat
+  // visits are served from Netlify's edge cache instead of Supabase Storage
+  // (keeps Supabase egress from scaling with site traffic). Local/static
+  // fallback images (/images/web/...) are left untouched. See netlify.toml
+  // [images].remote_images for the matching allowlist.
+  var SUPABASE_STORAGE_PREFIX = 'https://ryvmutpznmjphyghmqvu.supabase.co/storage/v1/object/public/';
+
+  function toCdnUrl(url, width) {
+    if (!url || url.indexOf(SUPABASE_STORAGE_PREFIX) !== 0) return url;
+    return '/.netlify/images?url=' + encodeURIComponent(url) + '&w=' + width + '&q=80';
+  }
+
+  // If the CDN proxy 404s (e.g. running via a plain static server outside
+  // Netlify, or a transform failure), fall back to the original URL once.
+  function withCdnFallback(imgEl, originalUrl) {
+    imgEl.addEventListener('error', function onError() {
+      imgEl.removeEventListener('error', onError);
+      if (imgEl.src !== originalUrl) imgEl.src = originalUrl;
+    });
+  }
+
   // ─── Element references ───────────────────────────────────────────────────
   var grid       = document.getElementById('gallery-grid');
   var lightbox   = document.getElementById('lightbox');
@@ -55,6 +77,8 @@
     refreshVisibleItems();
   }
 
+  var GRID_THUMB_WIDTH = 900;
+
   function createGalleryItem(src, alt, category) {
     var div = document.createElement('div');
     div.className = 'gallery-item';
@@ -66,22 +90,20 @@
     div.setAttribute('aria-label', 'View ' + alt);
 
     div.innerHTML =
-      '<img src="' + src + '" alt="' + escapeAttr(alt) + '" loading="lazy">' +
       '<div class="gallery-item__overlay" aria-hidden="true">' +
         '<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' +
           '<path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/>' +
         '</svg>' +
       '</div>';
 
-    return div;
-  }
+    var img = document.createElement('img');
+    img.alt = alt;
+    img.loading = 'lazy';
+    img.src = toCdnUrl(src, GRID_THUMB_WIDTH);
+    withCdnFallback(img, src);
+    div.insertBefore(img, div.firstChild);
 
-  function escapeAttr(str) {
-    return String(str)
-      .replace(/&/g, '&amp;')
-      .replace(/"/g, '&quot;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;');
+    return div;
   }
 
   // ─── Visible items helper ─────────────────────────────────────────────────
@@ -119,27 +141,30 @@
     }
   }
 
+  var LIGHTBOX_WIDTH = 1800;
+
   function loadLightboxImage(item) {
     if (!item || !lbImg) return;
 
     var src = item.getAttribute('data-src') || '';
     var alt = item.getAttribute('data-alt') || '';
+    var cdnSrc = toCdnUrl(src, LIGHTBOX_WIDTH);
 
     lbImg.classList.add('is-loading');
     lbImg.src = '';
 
     var tempImg = new Image();
     tempImg.onload = function () {
-      lbImg.src = src;
+      lbImg.src = cdnSrc;
       lbImg.alt = alt;
       lbImg.classList.remove('is-loading');
     };
     tempImg.onerror = function () {
-      lbImg.src = src; // show anyway
+      lbImg.src = src; // CDN proxy unavailable — show the original directly
       lbImg.alt = alt;
       lbImg.classList.remove('is-loading');
     };
-    tempImg.src = src;
+    tempImg.src = cdnSrc;
 
     updateCounter();
   }
