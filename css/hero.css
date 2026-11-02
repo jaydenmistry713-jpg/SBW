@@ -67,6 +67,7 @@
   font-size: var(--text-xs);
   font-weight: 600;
   letter-spacing: 0.25em;
+  line-height: 1.6;
   text-transform: uppercase;
   color: var(--color-gold-light);
   margin-bottom: var(--space-5);

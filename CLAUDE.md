@@ -66,7 +66,7 @@ No environment variables required — the Elfsight widget is a client-side CDN e
   gallery.html            — Gallery (Supabase fetch, lightbox — no filters)
   contact.html            — Contact/enquiry form (Netlify Forms)
   blog.html               — Blog index (static card grid linking to /blog/ articles)
-  sitemap.xml             — SEO sitemap (all 15 public pages; update when adding/removing pages)
+  sitemap.xml             — SEO sitemap (all 16 public pages; update when adding/removing pages)
   robots.txt             — Allows all, disallows /admin/, points to sitemap.xml
   netlify.toml            — Netlify build/redirect/header config
   /services/
@@ -264,11 +264,34 @@ id uuid primary key, key text unique, value text, updated_at timestamptz
 - **Page-hero on sub-pages**: `margin-top` removed, `padding-top: var(--header-height)` added instead — dark green bg extends behind fixed nav so transparent nav has a dark background on all pages.
 
 ### SEO (sitemap, robots, structured data, social meta)
-- **`sitemap.xml`** lists all 15 public pages (excludes `/admin/`). **When you add or remove a page, update the sitemap.**
+- **`sitemap.xml`** lists all 16 public pages (excludes `/admin/`). **When you add or remove a page, update the sitemap.**
 - **`robots.txt`** allows everything except `/admin/` and references the sitemap.
-- **Structured data (JSON-LD)**: every public page carries a `LocalBusiness` block (name, `areaServed` = Scotland, phone, email, logo, social `sameAs`). Each `/blog/*` article additionally carries a `BlogPosting` block (headline, description, hero image, `datePublished`/`dateModified`, publisher). Admin pages have none.
+- **Structured data (JSON-LD)**: every public page carries a `LocalBusiness` block (name, `alternateName` = Shadi Biyah Wale, `areaServed` = Scotland / Glasgow / Edinburgh, phone, email, logo, social `sameAs`). Each `/blog/*` article additionally carries a `BlogPosting` block (headline, description, hero image, `datePublished`/`dateModified`, publisher). Admin pages have none.
 - **Social meta**: every public page has `og:image`, `og:url`, `twitter:card` (summary) and `twitter:image`. **The image is the logo (`/logo.png`)** per client request. Note: a transparent-background logo can render with a plain/box background on some social platforms — if richer social previews are wanted later, swap to a dedicated 1200×630 banner and switch `twitter:card` to `summary_large_image`.
 - These were applied in bulk via a Node script (UTF-8 safe). New pages do NOT get them automatically — add the tags + JSON-LD when creating a page, or re-run the injection logic.
+- **Homepage H1** (2026-11-02): the small gold `.hero__eyebrow` line is the `<h1>` ("Wedding & Event Specialists in Scotland"); the big "Shadi Biyah *Wale*" `.hero__tagline` is a `<p>` (visual only — the brand name has no search volume). Keep exactly one H1 per page.
+- **Keyword titles** (2026-11-02): homepage + event-planning / event-management / bespoke-decor `<title>` and `og:title` now lead with "Wedding … Scotland" search terms, ending `| SBW Events`.
+- **Related Reading** (2026-11-02): each `/services/*` page has a `.related-reading` section (styles in `main.css`) just before the CTA banner, linking 2 relevant `/blog/` articles using the article title as anchor text. When adding a blog article, consider linking it from the matching service page.
+
+### SEO Backlog (deferred — revisit in the SEO pass)
+Derived from an SEO plan Jayden used on another project, adapted to SBW. Agreed 2026-11-02 to defer these:
+
+**Item 6 — Location mentions (remainder).** Structured data `areaServed` already done. Still to apply — only reuses the coverage the client already approved on the contact page ("Glasgow, Edinburgh, the Central Belt and beyond"):
+| Where | Current | Proposed |
+|---|---|---|
+| `index.html` intro strip `<p>` | "…based in Scotland, bringing warmth, expertise, and creativity to every occasion. From intimate mehndi nights…" | "SBW Events is a family-run events business based in Scotland, working across Glasgow, Edinburgh, the Central Belt and beyond. We bring warmth, expertise and creativity to every occasion — from intimate mehndi nights to grand weddings — and handle every detail so you can focus on celebrating." |
+| `index.html` meta description | "…halal catering across Scotland. Weddings, celebrations…" | "…halal catering across Scotland, from Glasgow and Edinburgh to the Central Belt and beyond. Weddings, celebrations and special occasions of all kinds." |
+| `about.html` story `<p>` | "Based in Scotland and operating across the whole country…" | "Based in Scotland and working right across the country — from Glasgow and Edinburgh to the Central Belt and beyond…" |
+| `index.html` Recent Work subtitle | "…across Scotland and beyond." | "…brought to life in Glasgow, Edinburgh and across Scotland." — **only if the client confirms real events in both cities** |
+
+Open questions for the client: (a) which town/city they're actually based in — if she's happy to name it, add `addressLocality` to the JSON-LD + mention on the contact page, matching her Google Business Profile; (b) whether they've genuinely delivered events in both Glasgow and Edinburgh. Do NOT create thin per-city landing pages — only build a Glasgow/Edinburgh page if she can supply real venues/events there.
+
+**Other deferred items:**
+- **FAQs** — none on the site yet. Plan: booking FAQs on contact page; service-specific FAQs on each service page (halal, minimum numbers, décor-only, 500-guest capacity, multiple events/day, working with the couple's venue). No duplicated answers across pages. Skip FAQPage schema (Google limited FAQ rich results in 2023).
+- **Real event case studies** — 3–5 real events (venue, city, guest count, services, photos). Needs client input. Highest-impact item.
+- **Crawlable reviews** — Elfsight renders reviews via JS, so Google may not index the text. With permission, hardcode 2–3 real reviews into `index.html` too.
+- **Blog cluster** — e.g. wedding planner cost in Scotland (needs pricing ranges), planner vs coordinator, multi-day weddings (mehndi → reception), planning timeline (was previously retired — check with client).
+- **Positioning decision (client's call)** — whether to target "Asian wedding planner Glasgow"-type searches via one dedicated page, given the current broad brand direction.
 
 ### Blog (blog.html + /blog/*.html)
 - **Static, no CMS.** Every article is a hand-authored HTML file in `/blog/`. The index (`blog.html`) is a manually maintained `.blog-grid` of `.blog-card`s — when adding an article, create the `/blog/` file AND add a card to the index.

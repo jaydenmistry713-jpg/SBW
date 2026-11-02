@@ -508,6 +508,62 @@ h4 { font-size: var(--text-xl); font-weight: 500; }
   transform: scale(1.04);
 }
 
+/* === Related Reading (service pages → blog) === */
+.related-reading .section-header {
+  margin-bottom: var(--space-8);
+}
+
+.related-reading__list {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-4);
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.related-reading__list li {
+  flex: 1 1 280px;
+  max-width: 440px;
+}
+
+.related-reading__link {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  height: 100%;
+  padding: var(--space-6);
+  background: var(--color-white);
+  border: 1px solid var(--color-border);
+  border-top: 2px solid var(--color-gold-light);
+  border-radius: var(--radius-sm);
+  text-decoration: none;
+  transition: box-shadow var(--transition-base), transform var(--transition-base);
+}
+
+.related-reading__link:hover,
+.related-reading__link:focus-visible {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+.related-reading__title {
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
+  line-height: 1.25;
+  color: var(--color-dark);
+}
+
+.related-reading__more {
+  margin-top: auto;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--color-gold-dark);
+}
+
 /* === Text utilities === */
 .text-center { text-align: center; }
 .text-gold { color: var(--color-gold); }
