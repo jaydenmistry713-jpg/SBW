@@ -307,10 +307,11 @@
               class="form-control gallery-alt-input"
               placeholder="Alt text / description"
               value="${escapeHtml(img.alt_text || '')}"
+              data-saved="${escapeHtml(img.alt_text || '')}"
               data-id="${img.id}"
               data-field="alt_text"
             >
-            <select class="form-control gallery-category-select" data-id="${img.id}" data-field="category">
+            <select class="form-control gallery-category-select" data-id="${img.id}" data-field="category" data-saved="${escapeHtml(img.category || 'all')}">
               <option value="all"${img.category === 'all' ? ' selected' : ''}>All</option>
               <option value="decor"${img.category === 'decor' ? ' selected' : ''}>Decor</option>
               <option value="catering"${img.category === 'catering' ? ' selected' : ''}>Catering</option>
@@ -348,19 +349,29 @@
     const el = e.target;
     const id = el.dataset.id;
     const field = el.dataset.field;
-    const value = el.value;
+    const value = field === 'alt_text' ? el.value.trim() : el.value;
+
+    // Blur fires even when nothing changed — don't write (or show "Saved") needlessly
+    if (el.dataset.saved === value) return;
 
     try {
       const update = {};
       update[field] = value;
-      const { error } = await supabaseClient
+      // .select() returns the rows actually changed; an update that row-level
+      // security doesn't allow returns 0 rows instead of an error.
+      const { data, error } = await supabaseClient
         .from('gallery_images')
         .update(update)
-        .eq('id', id);
+        .eq('id', id)
+        .select('id');
       if (error) throw error;
+      if (!data || !data.length) throw new Error('The database didn’t save the change (no permission to update gallery images).');
+
+      el.dataset.saved = value;
+      showAlert('success', field === 'alt_text' ? 'Description saved.' : 'Saved.');
     } catch (err) {
       console.error('Failed to update gallery item:', err);
-      showAlert('error', 'Failed to save change: ' + (err.message || 'Unknown error'));
+      showAlert('error', 'Couldn’t save that change. ' + (err.message || 'Please try again.'));
     }
   }
 
@@ -375,12 +386,17 @@
     btn.textContent = 'Deleting…';
 
     try {
-      // Delete from database
-      const { error: dbError } = await supabaseClient
+      // Delete the database row first and confirm it really went (.select()
+      // returns deleted rows; an RLS-blocked delete returns none, not an error).
+      // Only then remove the file — otherwise a blocked delete would leave the
+      // row pointing at a missing file, i.e. a broken image on the live gallery.
+      const { data: deleted, error: dbError } = await supabaseClient
         .from('gallery_images')
         .delete()
-        .eq('id', id);
+        .eq('id', id)
+        .select('id');
       if (dbError) throw dbError;
+      if (!deleted || !deleted.length) throw new Error('The database didn’t delete it (no permission to delete gallery images).');
 
       // Delete from storage if path available
       if (storagePath) {
@@ -397,7 +413,7 @@
       showAlert('success', 'Image deleted successfully.');
     } catch (err) {
       console.error('Failed to delete image:', err);
-      showAlert('error', 'Failed to delete image: ' + (err.message || 'Unknown error'));
+      showAlert('error', 'Couldn’t delete this photo. ' + (err.message || 'Please try again.'));
       btn.disabled = false;
       btn.textContent = 'Delete';
     }
@@ -471,7 +487,24 @@
     let successCount = 0;
     let errorCount = 0;
 
+    // New uploads go to the TOP of the gallery (lowest sort_order first), kept
+    // in the order they were chosen. Otherwise they'd sit behind every existing
+    // photo and several "Load More" clicks on the public Gallery page.
+    let nextSortOrder = 0;
+    try {
+      const { data: first } = await supabaseClient
+        .from('gallery_images')
+        .select('sort_order')
+        .order('sort_order', { ascending: true })
+        .limit(1);
+      const currentMin = first && first.length && typeof first[0].sort_order === 'number' ? first[0].sort_order : 0;
+      nextSortOrder = currentMin - 10 * files.length;
+    } catch (err) {
+      console.warn('Could not read gallery order; new photos may not appear first', err);
+    }
+
     for (const rawFile of files) {
+      let uploadedPath = null;
       try {
         const file = await compressImage(rawFile);
 
@@ -489,6 +522,7 @@
           .upload(storagePath, file, { cacheControl: '31536000', upsert: false });
 
         if (uploadError) throw uploadError;
+        uploadedPath = storagePath;
 
         // Get public URL
         const { data: urlData } = supabaseClient.storage
@@ -505,15 +539,20 @@
             storage_path: storagePath,
             alt_text: file.name.replace(/\.[^.]+$/, '').replace(/[-_]/g, ' '),
             category: 'all',
-            sort_order: Date.now()
+            sort_order: nextSortOrder
           });
 
         if (dbError) throw dbError;
 
+        nextSortOrder += 10;
         successCount++;
       } catch (err) {
         console.error('Upload failed for', rawFile.name, err);
         errorCount++;
+        // Don't leave an orphaned file in storage if the database row failed
+        if (uploadedPath) {
+          supabaseClient.storage.from('gallery').remove([uploadedPath]).catch(function () {});
+        }
       }
     }
 
@@ -572,7 +611,12 @@
     }
   }
 
+  // Rows exactly as last loaded — saveMenus() replaces these, and can put them
+  // back if anything goes wrong part-way through.
+  let loadedMenuRows = [];
+
   function renderMenus(rows) {
+    loadedMenuRows = rows.map(function (r) { return Object.assign({}, r); });
     const grouped = {};
     rows.forEach(function (row) {
       const type = row.menu_type || 'buffet';
@@ -698,45 +742,83 @@
     try {
       const newRows = [];
       let order = 0;
+      let unnamedCourse = null;
 
       document.querySelectorAll('.menu-section').forEach(function (section) {
         const type = section.dataset.type;
         const num  = parseInt(section.dataset.num, 10);
         section.querySelectorAll('.menu-course-block').forEach(function (block) {
-          const courseName = (block.querySelector('.menu-course-name-input').value || '').trim();
-          if (!courseName) return;
+          const nameInput = block.querySelector('.menu-course-name-input');
+          const courseName = (nameInput.value || '').trim();
+          const items = [];
           block.querySelectorAll('.menu-item-row').forEach(function (row) {
             const itemText = (row.querySelector('.menu-item-input').value || '').trim();
-            if (!itemText) return;
+            if (itemText) items.push(itemText);
+          });
+          // A course with dishes but no name used to be dropped silently on save
+          if (!courseName) {
+            if (items.length && !unnamedCourse) unnamedCourse = nameInput;
+            return;
+          }
+          items.forEach(function (itemText) {
             newRows.push({ menu_type: type, menu_number: num, course_name: courseName, item_text: itemText, sort_order: order++ });
           });
         });
       });
 
-      // Collect which type+num combos are in the DOM
-      const combos = {};
-      newRows.forEach(function (r) { combos[r.menu_type + '_' + r.menu_number] = { type: r.menu_type, num: r.menu_number }; });
+      if (unnamedCourse) {
+        unnamedCourse.focus();
+        throw new Error('One of your courses has dishes but no course name. Add a name (e.g. "Starters") and save again.');
+      }
 
-      // Delete existing rows for each combo then reinsert
-      for (const key of Object.keys(combos)) {
-        const { type, num } = combos[key];
-        const { error } = await supabaseClient.from('catering_menus').delete().eq('menu_type', type).eq('menu_number', num);
-        if (error) throw error;
+      // Replace everything that was loaded. Order matters:
+      //  1) delete the old rows by id and CHECK they really went — a delete that
+      //     row-level security blocks returns 0 rows, not an error, and carrying
+      //     on would duplicate every dish on the live Catering page;
+      //  2) insert the new rows;
+      //  3) if the insert fails, put the old rows back so the menu is never left empty.
+      const oldRows = loadedMenuRows;
+      const oldIds = oldRows.map(function (r) { return r.id; }).filter(Boolean);
+
+      if (oldIds.length) {
+        const { data: deleted, error: delError } = await supabaseClient
+          .from('catering_menus')
+          .delete()
+          .in('id', oldIds)
+          .select('id');
+        if (delError) throw delError;
+        const deletedCount = deleted ? deleted.length : 0;
+        if (deletedCount !== oldIds.length) {
+          if (deletedCount > 0) await restoreMenuRows(oldRows, deleted);
+          throw new Error('The database didn’t allow the old menu to be replaced (no permission to delete menu items). Nothing was changed.');
+        }
       }
 
       if (newRows.length) {
-        const { error } = await supabaseClient.from('catering_menus').insert(newRows);
-        if (error) throw error;
+        const { error: insError } = await supabaseClient.from('catering_menus').insert(newRows);
+        if (insError) {
+          await restoreMenuRows(oldRows, oldRows);
+          throw insError;
+        }
       }
 
-      showAlert('success', 'Menus saved successfully.');
+      showAlert('success', 'Menus saved. Your Catering page is updated.');
       await fetchMenus();
     } catch (err) {
       console.error('Failed to save menus:', err);
-      showAlert('error', 'Failed to save: ' + (err.message || 'Unknown error'));
+      showAlert('error', 'Couldn’t save your menus. ' + (err.message || 'Please try again.'));
     } finally {
       if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'Save All Changes'; }
     }
+  }
+
+  // Re-insert previously loaded rows (only those in `which`, matched by id)
+  async function restoreMenuRows(snapshot, which) {
+    const ids = new Set(which.map(function (r) { return String(r.id); }));
+    const rows = snapshot.filter(function (r) { return ids.has(String(r.id)); });
+    if (!rows.length) return;
+    const { error } = await supabaseClient.from('catering_menus').insert(rows);
+    if (error) console.error('Could not restore menu rows', error, rows);
   }
 
   async function seedDefaultMenus(type) {
