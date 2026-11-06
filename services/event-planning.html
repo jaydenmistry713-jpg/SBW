@@ -5,12 +5,21 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Wedding &amp; Event Planner Scotland | SBW Events</title>
   <meta name="description" content="SBW Events offers comprehensive event planning and co-ordination services for weddings and events across Scotland. Vendor sourcing, venue liaison, timeline building, and more.">
-  <meta property="og:title" content="Wedding &amp; Event Planner Scotland | SBW Events">
-  <meta property="og:type" content="website">
   <link rel="canonical" href="https://sbwevents.co.uk/services/event-planning.html">
-  <meta property="og:image" content="https://sbwevents.co.uk/logo.png">
+  <link rel="icon" href="/favicon.ico" sizes="48x48">
+  <link rel="icon" href="/favicon-96x96.png" type="image/png" sizes="96x96">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <meta property="og:site_name" content="SBW Events">
+  <meta property="og:locale" content="en_GB">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Wedding &amp; Event Planner Scotland | SBW Events">
+  <meta property="og:description" content="SBW Events offers comprehensive event planning and co-ordination services for weddings and events across Scotland. Vendor sourcing, venue liaison, timeline building, and more.">
   <meta property="og:url" content="https://sbwevents.co.uk/services/event-planning.html">
+  <meta property="og:image" content="https://sbwevents.co.uk/logo.png">
+  <meta property="og:image:alt" content="SBW Events — Shadi Biyah Wale logo">
   <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Wedding &amp; Event Planner Scotland | SBW Events">
+  <meta name="twitter:description" content="SBW Events offers comprehensive event planning and co-ordination services for weddings and events across Scotland. Vendor sourcing, venue liaison, timeline building, and more.">
   <meta name="twitter:image" content="https://sbwevents.co.uk/logo.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -35,28 +44,88 @@
 {
   "@context": "https://schema.org",
   "@type": "LocalBusiness",
+  "@id": "https://sbwevents.co.uk/#business",
   "name": "SBW Events",
   "alternateName": "Shadi Biyah Wale",
-  "description": "Family-run weddings and events specialists based in Scotland, serving the whole country.",
+  "description": "Family-run weddings and events specialists based in Scotland, offering event planning, on-the-day management, bespoke décor and halal catering across the whole country.",
   "url": "https://sbwevents.co.uk/",
   "logo": "https://sbwevents.co.uk/logo.png",
   "image": "https://sbwevents.co.uk/logo.png",
   "telephone": "+447831322188",
   "email": "SBWevents@outlook.com",
   "areaServed": [
-    "Scotland",
-    "Glasgow",
-    "Edinburgh"
+    {
+      "@type": "Country",
+      "name": "Scotland"
+    },
+    {
+      "@type": "City",
+      "name": "Glasgow"
+    },
+    {
+      "@type": "City",
+      "name": "Edinburgh"
+    }
   ],
   "address": {
     "@type": "PostalAddress",
     "addressRegion": "Scotland",
     "addressCountry": "GB"
   },
+  "knowsAbout": [
+    "Wedding planning",
+    "Event management",
+    "Wedding décor",
+    "Halal catering"
+  ],
   "sameAs": [
-    "https://instagram.com/shadibiyahwale",
-    "https://tiktok.com/@shadibiyahwale"
+    "https://www.instagram.com/shadibiyahwale",
+    "https://www.tiktok.com/@shadibiyahwale"
   ]
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "https://sbwevents.co.uk/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Services",
+      "item": "https://sbwevents.co.uk/services.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "Event Planning & Co-ordination",
+      "item": "https://sbwevents.co.uk/services/event-planning.html"
+    }
+  ]
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Service",
+  "name": "Event Planning & Co-ordination",
+  "serviceType": "Event Planning & Co-ordination",
+  "description": "SBW Events offers comprehensive event planning and co-ordination services for weddings and events across Scotland. Vendor sourcing, venue liaison, timeline building, and more.",
+  "url": "https://sbwevents.co.uk/services/event-planning.html",
+  "provider": {
+    "@id": "https://sbwevents.co.uk/#business"
+  },
+  "areaServed": {
+    "@type": "Country",
+    "name": "Scotland"
+  },
+  "image": "https://sbwevents.co.uk/images/web/IMG_7317%20Sumayyah.jpeg"
 }
   </script>
 </head>
@@ -288,7 +357,8 @@
         </div>
       </div>
       <div class="footer-bottom">
-        <p>&copy; 2026 SBW Events. All rights reserved. Website by <a href="https://mistuzzo.com" target="_blank" rel="noopener">Mistuzzo Marketing</a>.</p>
+        <p>&copy; 2026 SBW Events. All rights reserved.</p>
+        <p class="footer-credit">Website by <a href="https://buildsbyleo.com" target="_blank" rel="noopener">Builds by Leo<span class="footer-credit__arrow" aria-hidden="true">&#8599;</span></a></p>
       </div>
     </div>
   </footer>

@@ -9,7 +9,8 @@ SBW Events website for sbwevents.co.uk. Family-run weddings and events business 
 **Display emails:** SBWevents@outlook.com + shadibiyahwale@outlook.com  
 **Phone:** +44 7831 322188  
 **Instagram:** @shadibiyahwale  
-**Built by:** Mistuzzo Marketing (Jayden Mistry)
+**Built by:** Mistuzzo Marketing (Jayden Mistry)  
+**Footer credit:** every public page's `.footer-bottom` has a `.footer-credit` line, "Website by Builds by Leo ↗", linking to https://buildsbyleo.com (replaced the old Mistuzzo Marketing link 2026-11-06; styles in `nav.css`)
 
 ### Pending client message — Asian identity direction
 > Hey! Just a heads up on a change we made — the site previously mentioned Asian weddings quite heavily throughout, but we felt it was making things seem too niche and could put off potential clients from other backgrounds. We've broadened the language across the site so it now reads as weddings and events for everyone, while still keeping a nod to South Asian expertise in the About section.
@@ -66,9 +67,11 @@ No environment variables required — the Elfsight widget is a client-side CDN e
   gallery.html            — Gallery (Supabase fetch, lightbox — no filters)
   contact.html            — Contact/enquiry form (Netlify Forms)
   blog.html               — Blog index (static card grid linking to /blog/ articles)
+  404.html                — Branded 404 (noindex; Netlify serves it automatically for missing paths)
+  favicon.ico / favicon-96x96.png / apple-touch-icon.png — Favicons generated from logo.png (Pillow); apple-touch-icon has a cream bg because iOS fills transparency black
   sitemap.xml             — SEO sitemap (all 16 public pages; update when adding/removing pages)
   robots.txt             — Allows all, disallows /admin/, points to sitemap.xml
-  netlify.toml            — Netlify build/redirect/header config
+  netlify.toml            — Netlify build/redirect/header config (incl. 301 sbweventslive.netlify.app/* → sbwevents.co.uk)
   /services/
     event-planning.html
     event-management.html
@@ -192,7 +195,7 @@ Client uploads via `/admin/gallery.html` are never assumed to be pre-compressed 
 5. **Replace stock images** — Client uploads real photos via admin CMS (`/admin/gallery.html`)
 6. **About page content** — Client supplies real team story and portrait photo
 7. **About stats** — Currently shows 100+ Events Delivered, 5★ Google Rating, 52.8K Instagram Followers (3 stats, 3-col layout at 1024px+)
-8. **Custom domain** (status 2026-11-02 — client approved go-live) — site is still only on `sbweventslive.netlify.app`. Client bought `sbwevents.co.uk` on **Squarespace Domains**; she's been asked to invite **jaydenmistry713@gmail.com** as Administrator under Domains → sbwevents.co.uk → Permissions (accepting needs a free Squarespace account). Fallback if that's awkward: she switches the domain to Netlify's nameservers (check she has no email on the domain first). Once in: add domain in Netlify → DNS → confirm HTTPS on apex + `www` → test enquiry from live domain → submit `sitemap.xml` in Google Search Console.
+8. **Custom domain** (status 2026-11-06) — DNS for `sbwevents.co.uk` (Squarespace Domains) now points at Netlify: apex A → `75.2.60.5`, `www` CNAME → `sbweventslive.netlify.app`; Netlify primary domain is the apex and `www` 301s to it. **HTTPS confirmed live 2026-11-06** (Let's Encrypt issued later that day): `http://` and `www` both 301 to `https://sbwevents.co.uk/`; `sitemap.xml` + `robots.txt` serve 200. Remaining: deploy the netlify.app→custom-domain 301 in `netlify.toml` → test enquiry from live domain → Google Search Console Domain property (DNS TXT in Squarespace) → submit `sitemap.xml`.
 9. **Admin "Texts" editor is not wired up** — `/admin/texts.html` reads/writes `editable_texts`, but **no public page reads that table**, so edits there change nothing on the live site. Decide before the client uses the admin: hide it from the admin nav, or wire specific `data-` keys on public pages to it. The client-facing "what you can edit" message deliberately omitted it.
 10. **Handover** — send admin login link; switch form notification email (see 3).
 
@@ -269,9 +272,9 @@ id uuid primary key, key text unique, value text, updated_at timestamptz
 ### SEO (sitemap, robots, structured data, social meta)
 - **`sitemap.xml`** lists all 16 public pages (excludes `/admin/`). **When you add or remove a page, update the sitemap.**
 - **`robots.txt`** allows everything except `/admin/` and references the sitemap.
-- **Structured data (JSON-LD)**: every public page carries a `LocalBusiness` block (name, `alternateName` = Shadi Biyah Wale, `areaServed` = Scotland / Glasgow / Edinburgh, phone, email, logo, social `sameAs`). Each `/blog/*` article additionally carries a `BlogPosting` block (headline, description, hero image, `datePublished`/`dateModified`, publisher). Admin pages have none.
-- **Social meta**: every public page has `og:image`, `og:url`, `twitter:card` (summary) and `twitter:image`. **The image is the logo (`/logo.png`)** per client request. Note: a transparent-background logo can render with a plain/box background on some social platforms — if richer social previews are wanted later, swap to a dedicated 1200×630 banner and switch `twitter:card` to `summary_large_image`.
-- These were applied in bulk via a Node script (UTF-8 safe). New pages do NOT get them automatically — add the tags + JSON-LD when creating a page, or re-run the injection logic.
+- **Structured data (JSON-LD)** (expanded 2026-11-06): every public page carries a `LocalBusiness` block with `@id` `https://sbwevents.co.uk/#business` (name, `alternateName` = Shadi Biyah Wale, typed `areaServed` = Scotland / Glasgow / Edinburgh, phone, email, logo, `knowsAbout`, `sameAs` Instagram + TikTok). Homepage adds a `WebSite` block (drives Google's site-name display). Every sub-page adds a `BreadcrumbList` that **mirrors its visible `.breadcrumb` nav exactly** — if you change a visible breadcrumb, change the JSON-LD too. `/services/*` pages add a `Service` block (`provider` → the `#business` @id). `/blog/*` articles carry `BlogPosting` (headline, description, hero image, `datePublished`/`dateModified`, url, author/publisher). Admin pages have none. Validate with Google's Rich Results Test after changes.
+- **Social meta**: every public page has the same ordered head block: canonical, favicons, `og:site_name`, `og:locale` (en_GB), `og:type`, `og:title`, `og:description`, `og:url`, `og:image` (+alt), `article:published_time`/`modified_time` on blog posts, `twitter:card` (summary), `twitter:title`, `twitter:description`, `twitter:image`. **The image is the logo (`/logo.png`)** per client request. Note: a transparent-background logo can render with a plain/box background on some social platforms — if richer social previews are wanted later, swap to a dedicated 1200×630 banner and switch `twitter:card` to `summary_large_image`.
+- These were applied in bulk via a Python script (UTF-8 safe, idempotent; 2026-11-06 — not committed). New pages do NOT get them automatically — add the tags + JSON-LD when creating a page, or re-run the injection logic.
 - **Homepage H1** (2026-11-02): the small gold `.hero__eyebrow` line is the `<h1>` ("Wedding & Event Specialists in Scotland"); the big "Shadi Biyah *Wale*" `.hero__tagline` is a `<p>` (visual only — the brand name has no search volume). Keep exactly one H1 per page.
 - **Keyword titles** (2026-11-02): homepage + event-planning / event-management / bespoke-decor `<title>` and `og:title` now lead with "Wedding … Scotland" search terms, ending `| SBW Events`.
 - **Related Reading** (2026-11-02): each `/services/*` page has a `.related-reading` section (styles in `main.css`) just before the CTA banner, linking 2 relevant `/blog/` articles using the article title as anchor text. When adding a blog article, consider linking it from the matching service page.

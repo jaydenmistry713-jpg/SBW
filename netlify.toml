@@ -4,6 +4,15 @@
 [images]
   remote_images = ["^https://ryvmutpznmjphyghmqvu\\.supabase\\.co/storage/v1/object/public/.*"]
 
+# Send the default Netlify subdomain to the custom domain so Google only
+# indexes one copy of the site. (www -> apex is handled by Netlify's primary
+# domain setting.) Requires HTTPS to be active on sbwevents.co.uk.
+[[redirects]]
+  from = "https://sbweventslive.netlify.app/*"
+  to = "https://sbwevents.co.uk/:splat"
+  status = 301
+  force = true
+
 [[headers]]
   for = "/*"
   [headers.values]
