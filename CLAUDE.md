@@ -269,6 +269,14 @@ id uuid primary key, key text unique, value text, updated_at timestamptz
 - Logo: `<img src="/logo.png" class="nav-logo__img">` — 64px tall image, transparent background PNG
 - **Page-hero on sub-pages**: `margin-top` removed, `padding-top: var(--header-height)` added instead — dark green bg extends behind fixed nav so transparent nav has a dark background on all pages.
 
+### Scroll Reveal Animations (added 2026-11-06)
+- `main.js` (every public page) tags below-the-fold content matching `REVEAL_SELECTORS` with `.reveal` and uses an IntersectionObserver to add `.is-revealed` — a 0.7s fade + 24px rise. Siblings entering together stagger 90ms (max 4 steps) via a JS-set `--reveal-delay` custom property.
+- **Elements already on screen at load are never touched** (no flash, no LCP delay) — so above-the-fold heroes never animate.
+- Uses the standalone CSS `translate` property (not `transform`) so it can't clash with components' `transform` hover effects; once revealed, both classes and the delay are removed so each component's own transitions apply untouched.
+- The transition lives only on `.reveal.is-revealed` (hiding is instant). Selectors are `html .reveal…` to out-rank later component CSS (`cards.css`, page `<style>` blocks) that set their own `transition`.
+- Disabled entirely under `prefers-reduced-motion` and when IntersectionObserver is missing. Gallery items are excluded (`gallery.js` has its own Load More reveal); blog article prose and the Elfsight widget are deliberately not animated.
+- To animate a new component, add its selector to `REVEAL_SELECTORS` — no markup changes needed.
+
 ### SEO (sitemap, robots, structured data, social meta)
 - **`sitemap.xml`** lists all 16 public pages (excludes `/admin/`). **When you add or remove a page, update the sitemap.**
 - **`robots.txt`** allows everything except `/admin/` and references the sitemap.

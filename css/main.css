@@ -326,6 +326,33 @@ h4 { font-size: var(--text-xl); font-weight: 500; }
   justify-content: center;
 }
 
+/* === Scroll reveal (classes added/removed by main.js) === */
+/* Uses the standalone `translate` property so it never fights a component's
+   own `transform` hover effects. `html` prefix out-ranks component rules
+   (e.g. `.service-card { transition: … }` in cards.css, loaded later). */
+html .reveal {
+  opacity: 0;
+  translate: 0 24px;
+}
+
+/* Transition lives on the reveal-in state only, so hiding is instant
+   (no fade-out when main.js first tags below-the-fold content) */
+html .reveal.is-revealed {
+  opacity: 1;
+  translate: none;
+  transition:
+    opacity 0.7s ease var(--reveal-delay, 0ms),
+    translate 0.7s cubic-bezier(0.2, 0.65, 0.3, 1) var(--reveal-delay, 0ms);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html .reveal {
+    opacity: 1;
+    translate: none;
+    transition: none;
+  }
+}
+
 /* === Page Hero (non-slider) === */
 .page-hero {
   position: relative;

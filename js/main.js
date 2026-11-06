@@ -100,4 +100,76 @@
       window.scrollTo({ top, behavior: 'smooth' });
     });
   });
+
+  // === Scroll reveal ===
+  // Below-the-fold content fades up gently as it enters the viewport.
+  // Anything already on screen at load is left alone (no flash, no LCP delay).
+  // Gallery items are excluded — gallery.js has its own reveal for Load More.
+  const REVEAL_SELECTORS = [
+    '.section-header',
+    '.intro-strip__inner',
+    '.service-card',
+    '.work-grid__item',
+    '.service-full-card',
+    '.about-story__img-wrap',
+    '.about-story__content',
+    '.timeline__item',
+    '.stat',
+    '.value-card',
+    '.service-detail__img',
+    '.service-detail__body',
+    '.feature-item',
+    '.dietary-note',
+    '.menu-selector',
+    '.related-reading__list > li',
+    '.blog-intro',
+    '.blog-card',
+    '.contact-info-item',
+    '.enquiry-form-wrapper',
+    '.cta-banner__inner'
+  ].join(',');
+  const STAGGER_MS = 90;
+  const MAX_STAGGER_STEPS = 4;
+
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  if (!reduceMotion && 'IntersectionObserver' in window) {
+    const viewportH = window.innerHeight;
+    const targets = Array.prototype.filter.call(
+      document.querySelectorAll(REVEAL_SELECTORS),
+      function (el) { return el.getBoundingClientRect().top > viewportH; }
+    );
+
+    function finishReveal(el) {
+      el.classList.remove('reveal', 'is-revealed');
+      el.style.removeProperty('--reveal-delay');
+    }
+
+    const revealObserver = new IntersectionObserver(function (entries) {
+      // Stagger siblings that enter together (e.g. a row of cards)
+      const perParent = new Map();
+      entries.forEach(function (entry) {
+        if (!entry.isIntersecting) return;
+        const el = entry.target;
+        const step = perParent.get(el.parentElement) || 0;
+        perParent.set(el.parentElement, step + 1);
+        el.style.setProperty('--reveal-delay', Math.min(step, MAX_STAGGER_STEPS) * STAGGER_MS + 'ms');
+        el.classList.add('is-revealed');
+        revealObserver.unobserve(el);
+        // Drop the reveal classes afterwards so each component's own
+        // transitions (hover lifts etc.) apply untouched
+        el.addEventListener('transitionend', function onEnd(e) {
+          if (e.target !== el) return; // ignore bubbling from children
+          el.removeEventListener('transitionend', onEnd);
+          finishReveal(el);
+        });
+        setTimeout(function () { finishReveal(el); }, 1500);
+      });
+    }, { rootMargin: '0px 0px -8% 0px', threshold: 0.1 });
+
+    targets.forEach(function (el) {
+      el.classList.add('reveal');
+      revealObserver.observe(el);
+    });
+  }
 })();
