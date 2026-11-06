@@ -3,7 +3,12 @@
  *
  * Netlify runs this automatically after every *verified* (non-spam) Netlify
  * Forms submission. For the `enquiry` form it emails a branded HTML summary
- * via the Resend REST API (plain fetch — no npm, no dependencies).
+ * via the Resend REST API, and saves it to the Supabase `enquiries` table that
+ * the admin dashboard reads (plain fetch — no npm, no dependencies).
+ *
+ * The dashboard save used to run in the visitor's browser, where ad blockers /
+ * tracking protection silently blocked requests to *.supabase.co. Doing it here
+ * means every verified enquiry reaches the dashboard, and spam never does.
  *
  * Environment variables (Netlify → Project configuration → Environment variables):
  *   RESEND_API_KEY      required — Resend API key (account: jaydenmistry713@gmail.com)
@@ -18,6 +23,12 @@
 const SITE_URL = 'https://sbwevents.co.uk';
 const DEFAULT_TO = 'SBWevents@outlook.com';
 const DEFAULT_FROM = 'SBW Events Website <website@sbwevents.co.uk>';
+
+// Same public anon key as js/supabase-config.js — RLS lets `anon` INSERT into
+// enquiries but not read them. Never add `select()`/return=representation to
+// this insert: anon has no SELECT policy, so RETURNING would fail RLS.
+const SUPABASE_URL = 'https://ryvmutpznmjphyghmqvu.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ5dm11dHB6bm1qcGh5Z2htcXZ1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkyMDM4NjIsImV4cCI6MjA5NDc3OTg2Mn0.2VXrORzMt_pkkUnlsLeHXLvICqVVW9Up_0NoPfpquCw';
 
 // Brand palette (email clients need literal hex values, not CSS variables)
 const C = {
@@ -354,26 +365,53 @@ function buildEmail(payload) {
 }
 
 // ---------------------------------------------------------------------------
-// Handler
+// Admin dashboard row (columns match public.enquiries)
 // ---------------------------------------------------------------------------
-exports.handler = async function (event) {
-  let payload;
-  try {
-    payload = JSON.parse(event.body || '{}').payload;
-  } catch (err) {
-    console.error('[enquiry-email] Could not parse event body', err);
-    return { statusCode: 400, body: 'Bad payload' };
-  }
+function toDashboardRow(d) {
+  const v = function (k) { return d[k] ? d[k] : null; };
+  return {
+    full_name: v('full_name'),
+    phone: v('phone'),
+    email: v('email'),
+    event_date: v('event_date'),
+    event_type: v('event_type'),
+    venue_location: v('venue_location'),
+    number_of_events: v('number_of_events'),
+    service_planning: !!d.service_planning,
+    service_management: !!d.service_management,
+    service_decor_catering: !!d.service_decor_catering,
+    decor_catering_package: v('decor_catering_package'),
+    event_details: v('event_details'),
+    menu_type: v('menu_type'),
+    menu_preference: v('menu_preference'),
+    dietary_notes: v('dietary_notes'),
+    decor_theme: v('decor_theme'),
+    venue_confirmed: v('venue_confirmed'),
+    venue_name: v('venue_name'),
+    guest_count: v('guest_count'),
+    budget: v('budget'),
+    additional_notes: v('additional_notes')
+  };
+}
 
-  if (!payload || payload.form_name !== 'enquiry') {
-    return { statusCode: 200, body: 'Ignored (not the enquiry form)' };
-  }
+async function saveToDashboard(d) {
+  const res = await fetch(SUPABASE_URL + '/rest/v1/enquiries', {
+    method: 'POST',
+    headers: {
+      'apikey': SUPABASE_ANON_KEY,
+      'Authorization': 'Bearer ' + SUPABASE_ANON_KEY,
+      'Content-Type': 'application/json',
+      'Prefer': 'return=minimal'
+    },
+    body: JSON.stringify(toDashboardRow(d))
+  });
+  if (!res.ok) throw new Error('Supabase ' + res.status + ': ' + (await res.text()));
+  console.log('[enquiry-dashboard] Saved to Supabase enquiries');
+}
 
+async function sendEmail(payload) {
   const apiKey = process.env.RESEND_API_KEY;
-  if (!apiKey) {
-    console.error('[enquiry-email] RESEND_API_KEY is not set — email not sent');
-    return { statusCode: 200, body: 'Email not configured' };
-  }
+  if (!apiKey) throw new Error('RESEND_API_KEY is not set — email not sent');
 
   const to = (process.env.ENQUIRY_EMAIL_TO || DEFAULT_TO)
     .split(',').map(function (s) { return s.trim(); }).filter(Boolean);
@@ -387,22 +425,45 @@ exports.handler = async function (event) {
   // Guards against a duplicate email if Netlify ever re-delivers the same submission
   if (payload.id) headers['Idempotency-Key'] = 'enquiry-' + payload.id;
 
+  const res = await fetch('https://api.resend.com/emails', {
+    method: 'POST', headers: headers, body: JSON.stringify(body)
+  });
+  const result = await res.text();
+  if (!res.ok) throw new Error('Resend ' + res.status + ': ' + result);
+  console.log('[enquiry-email] Sent to ' + to.join(', ') + ': ' + result);
+}
+
+// ---------------------------------------------------------------------------
+// Handler — email and dashboard save run independently; one failing never
+// stops the other.
+// ---------------------------------------------------------------------------
+exports.handler = async function (event) {
+  let payload;
   try {
-    const res = await fetch('https://api.resend.com/emails', {
-      method: 'POST', headers: headers, body: JSON.stringify(body)
-    });
-    const result = await res.text();
-    if (!res.ok) {
-      console.error('[enquiry-email] Resend error ' + res.status + ': ' + result);
-      return { statusCode: 502, body: 'Email failed' };
-    }
-    console.log('[enquiry-email] Sent to ' + to.join(', ') + ': ' + result);
-    return { statusCode: 200, body: 'Sent' };
+    payload = JSON.parse(event.body || '{}').payload;
   } catch (err) {
-    console.error('[enquiry-email] Request to Resend failed', err);
-    return { statusCode: 502, body: 'Email failed' };
+    console.error('[enquiry] Could not parse event body', err);
+    return { statusCode: 400, body: 'Bad payload' };
   }
+
+  if (!payload || payload.form_name !== 'enquiry') {
+    return { statusCode: 200, body: 'Ignored (not the enquiry form)' };
+  }
+
+  const raw = payload.data || {};
+  const d = {};
+  Object.keys(raw).forEach(function (k) { d[k] = clean(raw[k]); });
+
+  const results = await Promise.allSettled([sendEmail(payload), saveToDashboard(d)]);
+  const labels = ['enquiry-email', 'enquiry-dashboard'];
+  results.forEach(function (r, i) {
+    if (r.status === 'rejected') console.error('[' + labels[i] + '] ' + (r.reason && r.reason.message || r.reason));
+  });
+
+  const ok = results.every(function (r) { return r.status === 'fulfilled'; });
+  return { statusCode: ok ? 200 : 502, body: ok ? 'Sent and saved' : 'Partial failure — see logs' };
 };
 
 // Exposed for local previews/tests
 exports.buildEmail = buildEmail;
+exports.toDashboardRow = toDashboardRow;
