@@ -173,7 +173,7 @@
         const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
         if (error) throw error;
         if (data.session) {
-          window.location.href = '/admin/gallery.html';
+          window.location.href = '/admin/enquiries.html';
         }
       } catch (err) {
         errorEl.textContent = err.message || 'Login failed. Please try again.';
@@ -1129,6 +1129,13 @@
 
     // Route to appropriate page handler
     if (document.getElementById('login-form')) {
+      // Already signed in on this device (session persists in localStorage and
+      // auto-refreshes) → skip the login form. Not on a reset-link visit: that
+      // also creates a session, but the user still needs to set a password.
+      if (session && !IS_RECOVERY_LINK && !AUTH_LINK_ERROR) {
+        window.location.replace('/admin/enquiries.html');
+        return;
+      }
       initLogin();
     } else if (session) {
       initSignOut();
