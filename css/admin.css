@@ -24,14 +24,119 @@
   margin-bottom: var(--space-8);
 }
 
-.admin-login-card__logo .logo-text {
-  font-size: var(--text-3xl);
+.admin-login-card__logo img {
+  display: block;
+  width: 96px;
+  height: 96px;
+  margin: 0 auto;
 }
 
 .admin-login-card h1 {
-  font-size: var(--text-2xl);
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: var(--text-3xl);
   text-align: center;
   margin-bottom: var(--space-2);
+}
+
+.admin-login-card__submit {
+  width: 100%;
+  margin-top: var(--space-2);
+}
+
+.admin-login-card__link {
+  display: block;
+  margin: var(--space-4) auto 0;
+  padding: var(--space-1) var(--space-2);
+  background: none;
+  border: none;
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  color: var(--color-green);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.admin-login-card__link:hover,
+.admin-login-card__link:focus-visible {
+  color: var(--color-green-dark);
+}
+
+.login-notice {
+  background-color: rgba(45, 80, 22, 0.06);
+  border: 1px solid rgba(45, 80, 22, 0.25);
+  border-radius: var(--radius-md);
+  padding: var(--space-3) var(--space-4);
+  color: var(--color-green-dark);
+  font-size: var(--text-sm);
+  line-height: 1.5;
+  margin-bottom: var(--space-5);
+}
+
+.admin-login-card__back {
+  text-align: center;
+  margin-top: var(--space-6);
+  font-size: var(--text-sm);
+}
+
+.admin-login-card__back a {
+  color: var(--color-mid);
+}
+
+.admin-login-card__back a:hover {
+  color: var(--color-green);
+}
+
+/* === Shared form controls (admin pages don't load contact-form.css) === */
+.admin-page .form-group {
+  margin-bottom: var(--space-5);
+}
+
+.admin-page .form-group label {
+  display: block;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-dark);
+  margin-bottom: var(--space-2);
+}
+
+.admin-page .form-control {
+  display: block;
+  width: 100%;
+  padding: 0.8rem 1rem;
+  background-color: var(--color-white);
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  color: var(--color-dark);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.admin-page .form-control:focus {
+  outline: none;
+  border-color: var(--color-green);
+  box-shadow: 0 0 0 3px rgba(45, 80, 22, 0.12);
+}
+
+.admin-page .form-control::placeholder {
+  color: var(--color-mid-light);
+}
+
+.admin-page textarea.form-control {
+  resize: vertical;
+  min-height: 110px;
+}
+
+.admin-page select.form-control {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23555' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  padding-right: 2.25rem;
+  cursor: pointer;
 }
 
 .admin-login-card .subtitle {
@@ -280,6 +385,49 @@
 .admin-gallery-item__meta select:focus {
   outline: none;
   border-color: var(--color-green);
+}
+
+/* Gallery card controls (markup in admin.js renderGallery) */
+.admin-gallery-item__img-wrap {
+  overflow: hidden;
+}
+
+.admin-gallery-item__controls {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  background-color: var(--color-white);
+}
+
+.admin-gallery-item__controls .gallery-alt-input {
+  grid-column: 1 / -1;
+}
+
+.admin-gallery-item__controls .form-control {
+  padding: 0.5rem 0.75rem;
+  font-size: var(--text-xs);
+  border-width: 1px;
+  border-radius: var(--radius-sm);
+}
+
+.admin-gallery-item__controls select.form-control {
+  padding-right: 2rem;
+}
+
+.admin-page .btn--delete {
+  padding: 0.5rem 0.75rem;
+  font-size: var(--text-xs);
+  background: transparent;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+  border-radius: var(--radius-sm);
+}
+
+.admin-page .btn--delete:hover,
+.admin-page .btn--delete:focus-visible {
+  background-color: #fef2f2;
+  border-color: #b91c1c;
 }
 
 /* Upload Zone */

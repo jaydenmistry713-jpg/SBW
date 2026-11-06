@@ -32,10 +32,130 @@
   // ---------------------------------------------------------------------------
   // LOGIN FORM
   // ---------------------------------------------------------------------------
+  // Read the reset-email callback before supabase-js clears the URL hash.
+  // Implicit flow lands on /admin/index.html#access_token=…&type=recovery,
+  // or #error=…&error_code=otp_expired if the link is stale/used.
+  const AUTH_HASH = new URLSearchParams(window.location.hash.replace(/^#/, ''));
+  const IS_RECOVERY_LINK = AUTH_HASH.get('type') === 'recovery';
+  const AUTH_LINK_ERROR = AUTH_HASH.get('error_description');
+
+  const LOGIN_VIEWS = {
+    login:  { title: 'CMS Login',          subtitle: 'Sign in to manage your website content.' },
+    forgot: { title: 'Reset Password',     subtitle: 'Enter your email and we’ll send you a link to set a new password.' },
+    reset:  { title: 'Set a New Password', subtitle: 'Choose a password with at least 8 characters.' }
+  };
+
+  function showLoginView(view) {
+    ['login', 'forgot', 'reset'].forEach(function (name) {
+      const f = document.getElementById(name + '-form');
+      if (f) f.hidden = name !== view;
+    });
+    document.getElementById('login-title').textContent = LOGIN_VIEWS[view].title;
+    document.getElementById('login-subtitle').textContent = LOGIN_VIEWS[view].subtitle;
+    showLoginMessage(null);
+  }
+
+  // type: 'error' | 'notice' | null (clears both)
+  function showLoginMessage(text, type) {
+    const errorEl = document.getElementById('login-error');
+    const noticeEl = document.getElementById('login-notice');
+    errorEl.style.display = 'none';
+    errorEl.textContent = '';
+    noticeEl.hidden = true;
+    noticeEl.textContent = '';
+    if (!text) return;
+    if (type === 'notice') {
+      noticeEl.textContent = text;
+      noticeEl.hidden = false;
+    } else {
+      errorEl.textContent = text;
+      errorEl.style.display = 'block';
+    }
+  }
+
+  function initPasswordReset() {
+    const forgotForm = document.getElementById('forgot-form');
+    const resetForm = document.getElementById('reset-form');
+    if (!forgotForm || !resetForm) return;
+
+    document.querySelectorAll('[data-login-view]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        showLoginView(btn.dataset.loginView);
+        if (btn.dataset.loginView === 'forgot') {
+          const loginEmail = document.getElementById('login-email').value.trim();
+          if (loginEmail) document.getElementById('forgot-email').value = loginEmail;
+          document.getElementById('forgot-email').focus();
+        }
+      });
+    });
+
+    // 1) Request the email
+    forgotForm.addEventListener('submit', async function (e) {
+      e.preventDefault();
+      const email = document.getElementById('forgot-email').value.trim();
+      const btn = forgotForm.querySelector('button[type="submit"]');
+      if (!email) { showLoginMessage('Please enter your email address.'); return; }
+
+      showLoginMessage(null);
+      btn.disabled = true;
+      btn.textContent = 'Sending…';
+      try {
+        const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
+          redirectTo: window.location.origin + '/admin/index.html'
+        });
+        if (error) throw error;
+        // Same message whether or not the account exists (no account enumeration)
+        showLoginMessage('If an account exists for ' + email + ', a reset link is on its way. Check your inbox (and junk folder) — the link expires after an hour.', 'notice');
+      } catch (err) {
+        showLoginMessage(err.message || 'Could not send the reset email. Please try again shortly.');
+      }
+      btn.disabled = false;
+      btn.textContent = 'Email Me a Reset Link';
+    });
+
+    // 2) Arrived from the email → choose a new password
+    resetForm.addEventListener('submit', async function (e) {
+      e.preventDefault();
+      const pw = document.getElementById('reset-password').value;
+      const confirmPw = document.getElementById('reset-password-confirm').value;
+      const btn = resetForm.querySelector('button[type="submit"]');
+
+      if (pw.length < 8) { showLoginMessage('Your password needs at least 8 characters.'); return; }
+      if (pw !== confirmPw) { showLoginMessage('Those passwords don’t match.'); return; }
+
+      showLoginMessage(null);
+      btn.disabled = true;
+      btn.textContent = 'Saving…';
+      try {
+        const { error } = await supabaseClient.auth.updateUser({ password: pw });
+        if (error) throw error;
+        window.location.href = '/admin/enquiries.html';
+      } catch (err) {
+        showLoginMessage(err.message || 'Could not save your password. Please request a new reset link.');
+        btn.disabled = false;
+        btn.textContent = 'Save Password & Sign In';
+      }
+    });
+
+    // Fallback in case supabase-js reports the recovery after we've rendered
+    supabaseClient.auth.onAuthStateChange(function (event) {
+      if (event === 'PASSWORD_RECOVERY') showLoginView('reset');
+    });
+
+    if (IS_RECOVERY_LINK) {
+      showLoginView('reset');
+    } else if (AUTH_LINK_ERROR) {
+      showLoginView('forgot');
+      showLoginMessage('That reset link has expired or was already used. Enter your email to get a new one.');
+      history.replaceState(null, '', window.location.pathname);
+    }
+  }
+
   function initLogin() {
     const form = document.getElementById('login-form');
     const errorEl = document.getElementById('login-error');
     if (!form) return;
+    initPasswordReset();
 
     form.addEventListener('submit', async function (e) {
       e.preventDefault();
@@ -155,6 +275,17 @@
     }
   }
 
+  // Admin thumbnails go through Netlify Image CDN (small, edge-cached) rather
+  // than pulling every full-size original from Supabase Storage on each visit.
+  // Mirrors toCdnUrl() in gallery.js — keep the prefix in sync with supabase-config.js.
+  const SUPABASE_STORAGE_PREFIX = 'https://ryvmutpznmjphyghmqvu.supabase.co/storage/v1/object/public/';
+  const ADMIN_THUMB_WIDTH = 400;
+
+  function toCdnThumb(url) {
+    if (!url || url.indexOf(SUPABASE_STORAGE_PREFIX) !== 0) return url;
+    return '/.netlify/images?url=' + encodeURIComponent(url) + '&w=' + ADMIN_THUMB_WIDTH + '&q=75';
+  }
+
   function renderGallery(images) {
     const grid = document.getElementById('admin-gallery-grid');
     if (!grid) return;
@@ -168,7 +299,7 @@
       return `
         <div class="admin-gallery-item" data-id="${img.id}">
           <div class="admin-gallery-item__img-wrap">
-            <img src="${escapeHtml(img.url || '')}" alt="${escapeHtml(img.alt_text || '')}" loading="lazy">
+            <img src="${escapeHtml(toCdnThumb(img.url || ''))}" data-original="${escapeHtml(img.url || '')}" alt="${escapeHtml(img.alt_text || '')}" loading="lazy">
           </div>
           <div class="admin-gallery-item__controls">
             <input
@@ -192,6 +323,14 @@
         </div>
       `;
     }).join('');
+
+    // CDN thumb failed (e.g. local dev without Netlify) → fall back to the original once
+    grid.querySelectorAll('img[data-original]').forEach(function (imgEl) {
+      imgEl.addEventListener('error', function onError() {
+        imgEl.removeEventListener('error', onError);
+        if (imgEl.src !== imgEl.dataset.original) imgEl.src = imgEl.dataset.original;
+      });
+    });
 
     // Attach update listeners (blur on inputs, change on selects)
     grid.querySelectorAll('.gallery-alt-input').forEach(function (input) {
@@ -344,7 +483,10 @@
         // Upload to Supabase storage
         const { error: uploadError } = await supabaseClient.storage
           .from('gallery')
-          .upload(storagePath, file, { cacheControl: '3600', upsert: false });
+          // 1-year cache: filenames are unique (timestamp + random) so an object
+          // never changes. Netlify Image CDN honours this header for remote
+          // images, so a long max-age = Supabase is rarely re-fetched (egress).
+          .upload(storagePath, file, { cacheControl: '31536000', upsert: false });
 
         if (uploadError) throw uploadError;
 

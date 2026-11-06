@@ -16,13 +16,15 @@
   <div class="admin-login-page">
     <div class="admin-login-card">
       <div class="admin-login-card__logo">
-        <span class="logo-text">SBW <span class="logo-accent">Events</span></span>
+        <img src="/logo.png" alt="SBW Events" width="96" height="96">
       </div>
-      <h1>CMS Login</h1>
-      <p class="subtitle">Sign in to manage your website content.</p>
+      <h1 id="login-title">CMS Login</h1>
+      <p class="subtitle" id="login-subtitle">Sign in to manage your website content.</p>
 
-      <div class="login-error" id="login-error" style="display:none;"></div>
+      <div class="login-error" id="login-error" style="display:none;" role="alert"></div>
+      <div class="login-notice" id="login-notice" hidden role="status"></div>
 
+      <!-- Sign in -->
       <form id="login-form" novalidate>
         <div class="form-group">
           <label for="login-email">Email Address</label>
@@ -32,11 +34,35 @@
           <label for="login-password">Password</label>
           <input type="password" id="login-password" class="form-control" required autocomplete="current-password">
         </div>
-        <button type="submit" class="btn btn--green" style="width:100%">Sign In</button>
+        <button type="submit" class="btn btn--green admin-login-card__submit">Sign In</button>
+        <button type="button" class="admin-login-card__link" data-login-view="forgot">Forgot your password?</button>
       </form>
 
-      <p style="text-align:center;margin-top:1rem;font-size:0.875rem;color:#888">
-        Back to site: <a href="/">sbwevents.co.uk</a>
+      <!-- Request a reset link -->
+      <form id="forgot-form" novalidate hidden>
+        <div class="form-group">
+          <label for="forgot-email">Email Address</label>
+          <input type="email" id="forgot-email" class="form-control" required autocomplete="email">
+        </div>
+        <button type="submit" class="btn btn--green admin-login-card__submit">Email Me a Reset Link</button>
+        <button type="button" class="admin-login-card__link" data-login-view="login">&larr; Back to sign in</button>
+      </form>
+
+      <!-- Set a new password (shown when arriving from the reset email) -->
+      <form id="reset-form" novalidate hidden>
+        <div class="form-group">
+          <label for="reset-password">New Password</label>
+          <input type="password" id="reset-password" class="form-control" required minlength="8" autocomplete="new-password">
+        </div>
+        <div class="form-group">
+          <label for="reset-password-confirm">Confirm New Password</label>
+          <input type="password" id="reset-password-confirm" class="form-control" required minlength="8" autocomplete="new-password">
+        </div>
+        <button type="submit" class="btn btn--green admin-login-card__submit">Save Password &amp; Sign In</button>
+      </form>
+
+      <p class="admin-login-card__back">
+        <a href="/">&larr; Back to sbwevents.co.uk</a>
       </p>
     </div>
   </div>
