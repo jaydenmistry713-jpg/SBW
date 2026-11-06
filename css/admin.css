@@ -773,6 +773,25 @@
   margin-bottom: var(--space-5);
 }
 
+.enquiries-loading {
+  color: var(--color-mid);
+}
+
+.enquiries-error {
+  margin: 0;
+}
+
+.enquiry-card__header:focus-visible {
+  outline: 2px solid var(--color-gold);
+  outline-offset: -2px;
+}
+
+.enquiry-field__value a {
+  color: var(--color-green);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
 .enquiries-empty {
   text-align: center;
   color: var(--color-mid);

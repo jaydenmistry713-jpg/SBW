@@ -895,6 +895,37 @@
   // ---------------------------------------------------------------------------
   var allEnquiries = [];
   var enquiriesFilter = 'active';
+  var openEnquiryIds = new Set();   // keeps expanded cards open across re-renders
+  var lastEnquiriesFetch = 0;
+  var REFETCH_AFTER_MS = 60 * 1000;
+
+  // Stored form values → readable labels (must match contact.html options)
+  var ENQUIRY_LABELS = {
+    event_type: {
+      engagement: 'Engagement', nikkah: 'Nikkah', mehndi: 'Mehndi',
+      wedding: 'Wedding & Walimah', corporate: 'Corporate', other: 'Other'
+    },
+    decor_catering_package: { 'food-decor': 'Food & Décor', 'decor-only': 'Décor Only' },
+    menu_type: { buffet: 'Buffet', 'table-service': 'Table Service' },
+    menu_preference: { 'menu-1': 'Menu 1', 'menu-2': 'Menu 2' },
+    venue_confirmed: { yes: 'Yes', no: 'No' }
+  };
+
+  function enquiryLabel(field, value) {
+    if (value === null || value === undefined || value === '') return null;
+    var map = ENQUIRY_LABELS[field];
+    return (map && map[value]) || String(value);
+  }
+
+  // "2027-06-12" → "Sat 12 Jun 2027" (parsed as a calendar date, no timezone shift)
+  function formatEnquiryEventDate(iso) {
+    var m = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso || '');
+    if (!m) return iso || null;
+    var d = new Date(Date.UTC(+m[1], +m[2] - 1, +m[3]));
+    return d.toLocaleDateString('en-GB', {
+      weekday: 'short', day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC'
+    }).replace(',', '');
+  }
 
   function initEnquiries() {
     document.querySelectorAll('.enquiries-filter-tab').forEach(function (tab) {
@@ -902,18 +933,42 @@
         enquiriesFilter = tab.dataset.filter;
         document.querySelectorAll('.enquiries-filter-tab').forEach(function (t) {
           t.classList.toggle('is-active', t === tab);
+          t.setAttribute('aria-selected', t === tab ? 'true' : 'false');
         });
         renderEnquiries();
       });
     });
+
+    // One delegated listener for every card (survives re-renders)
+    var list = document.getElementById('enquiries-list');
+    if (list) {
+      list.addEventListener('click', handleEnquiryListClick);
+      list.addEventListener('keydown', function (e) {
+        var header = e.target.closest('.enquiry-card__header');
+        if (!header || e.target !== header) return;   // ignore keys on the inner buttons/links
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          toggleEnquiryCard(header);
+        }
+      });
+    }
+
+    // Pick up new enquiries when she comes back to the tab (it may be left open all day)
+    document.addEventListener('visibilitychange', function () {
+      if (document.visibilityState === 'visible' && Date.now() - lastEnquiriesFetch > REFETCH_AFTER_MS) {
+        fetchEnquiries({ quiet: true });
+      }
+    });
+
     fetchEnquiries();
   }
 
-  async function fetchEnquiries() {
+  async function fetchEnquiries(opts) {
+    var quiet = opts && opts.quiet;
     var list = document.getElementById('enquiries-list');
     if (!list) return;
 
-    list.innerHTML = '<p style="color:var(--color-mid);">Loading enquiries…</p>';
+    if (!quiet) list.innerHTML = '<p class="enquiries-loading">Loading enquiries…</p>';
 
     try {
       var result = await supabaseClient
@@ -923,10 +978,13 @@
 
       if (result.error) throw result.error;
       allEnquiries = result.data || [];
+      lastEnquiriesFetch = Date.now();
       renderEnquiries();
     } catch (err) {
       console.error('Failed to fetch enquiries:', err);
-      list.innerHTML = '<div class="admin-alert admin-alert--error is-visible" style="margin:0;">' + escapeHtml(err.message || 'Failed to load enquiries.') + '</div>';
+      if (quiet) return; // keep showing what we have; the next visit retries
+      list.innerHTML = '<div class="admin-alert admin-alert--error is-visible enquiries-error">'
+        + escapeHtml(err.message || 'Failed to load enquiries.') + '</div>';
     }
   }
 
@@ -959,146 +1017,179 @@
     var countText = rows.length + ' enquir' + (rows.length === 1 ? 'y' : 'ies');
     list.innerHTML = '<p class="enquiries-count">' + countText + '</p>'
       + rows.map(buildEnquiryCardHTML).join('');
-
-    list.querySelectorAll('.enquiry-card__header').forEach(function (header) {
-      header.addEventListener('click', function () {
-        header.closest('.enquiry-card').classList.toggle('is-open');
-      });
-    });
-    list.querySelectorAll('.enquiry-archive-btn').forEach(function (btn) {
-      btn.addEventListener('click', handleEnquiryArchiveToggle);
-    });
-    list.querySelectorAll('.enquiry-delete-btn').forEach(function (btn) {
-      btn.addEventListener('click', handleEnquiryDelete);
-    });
   }
 
-  async function handleEnquiryArchiveToggle(e) {
-    e.stopPropagation();
-    var btn = e.currentTarget;
+  function toggleEnquiryCard(header) {
+    var card = header.closest('.enquiry-card');
+    var open = card.classList.toggle('is-open');
+    header.setAttribute('aria-expanded', open ? 'true' : 'false');
+    if (open) openEnquiryIds.add(card.dataset.id);
+    else openEnquiryIds.delete(card.dataset.id);
+  }
+
+  function handleEnquiryListClick(e) {
+    var archiveBtn = e.target.closest('.enquiry-archive-btn');
+    if (archiveBtn) { e.stopPropagation(); handleEnquiryArchiveToggle(archiveBtn); return; }
+
+    var deleteBtn = e.target.closest('.enquiry-delete-btn');
+    if (deleteBtn) { e.stopPropagation(); handleEnquiryDelete(deleteBtn); return; }
+
+    if (e.target.closest('a')) return;               // email / phone links
+
+    var header = e.target.closest('.enquiry-card__header');
+    if (header) toggleEnquiryCard(header);
+  }
+
+  function findEnquiry(id) {
+    return allEnquiries.find(function (r) { return String(r.id) === String(id); });
+  }
+
+  async function handleEnquiryArchiveToggle(btn) {
     var id = btn.dataset.id;
     var nextArchived = btn.dataset.archived !== 'true';
 
     btn.disabled = true;
 
     try {
+      // .select() makes Supabase return the rows it actually changed. Without
+      // it, an update blocked by row-level security "succeeds" with 0 rows.
       var result = await supabaseClient
         .from('enquiries')
         .update({ archived: nextArchived })
-        .eq('id', id);
+        .eq('id', id)
+        .select('id');
       if (result.error) throw result.error;
+      if (!result.data || !result.data.length) {
+        throw new Error('The database didn’t save the change (no permission to update enquiries).');
+      }
 
-      var row = allEnquiries.find(function (r) { return String(r.id) === String(id); });
+      var row = findEnquiry(id);
       if (row) row.archived = nextArchived;
 
       showAlert('success', nextArchived ? 'Enquiry archived.' : 'Enquiry restored to active.');
       renderEnquiries();
     } catch (err) {
       console.error('Failed to update enquiry:', err);
-      showAlert('error', 'Failed to update enquiry: ' + (err.message || 'Unknown error'));
+      showAlert('error', 'Couldn’t update this enquiry. ' + (err.message || 'Please try again.'));
       btn.disabled = false;
     }
   }
 
-  async function handleEnquiryDelete(e) {
-    e.stopPropagation();
-    var btn = e.currentTarget;
+  async function handleEnquiryDelete(btn) {
     var id = btn.dataset.id;
+    var row = findEnquiry(id);
+    var who = row && row.full_name ? ' from ' + row.full_name : '';
 
-    if (!confirm('Delete this enquiry permanently? This cannot be undone.')) return;
+    if (!confirm('Delete this enquiry' + who + ' permanently? This cannot be undone.')) return;
 
     btn.disabled = true;
     btn.textContent = 'Deleting…';
 
     try {
+      // .select() returns the deleted rows — an RLS-blocked delete returns none
+      // instead of an error, which used to make "deleted" enquiries reappear.
       var result = await supabaseClient
         .from('enquiries')
         .delete()
-        .eq('id', id);
+        .eq('id', id)
+        .select('id');
       if (result.error) throw result.error;
+      if (!result.data || !result.data.length) {
+        throw new Error('The database didn’t delete it (no permission to delete enquiries).');
+      }
 
       allEnquiries = allEnquiries.filter(function (r) { return String(r.id) !== String(id); });
+      openEnquiryIds.delete(String(id));
 
       showAlert('success', 'Enquiry deleted.');
       renderEnquiries();
     } catch (err) {
       console.error('Failed to delete enquiry:', err);
-      showAlert('error', 'Failed to delete enquiry: ' + (err.message || 'Unknown error'));
+      showAlert('error', 'Couldn’t delete this enquiry. ' + (err.message || 'Please try again.'));
       btn.disabled = false;
       btn.textContent = 'Delete';
     }
   }
 
   function buildEnquiryCardHTML(row) {
-    var submitted = new Date(row.created_at);
-    var submittedStr = submitted.toLocaleDateString('en-GB', {
-      day: 'numeric', month: 'short', year: 'numeric',
-      hour: '2-digit', minute: '2-digit'
-    });
+    var id = String(row.id);
+    var isOpen = openEnquiryIds.has(id);
+    var submittedStr = row.created_at
+      ? new Date(row.created_at).toLocaleString('en-GB', {
+          day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'
+        })
+      : '';
 
     var services = [];
     if (row.service_planning)   services.push('Event Planning');
     if (row.service_management) services.push('Event Management');
     if (row.service_decor_catering) {
-      if (row.decor_catering_package === 'food-decor') services.push('Food & Décor');
-      else if (row.decor_catering_package === 'decor-only') services.push('Décor Only');
-      else services.push('Décor / Catering');
+      services.push(row.decor_catering_package
+        ? 'Décor / Catering (' + enquiryLabel('decor_catering_package', row.decor_catering_package) + ')'
+        : 'Décor / Catering');
     }
 
-    var metaHTML = '<span>' + escapeHtml(submittedStr) + '</span>';
-    if (row.event_type) {
-      metaHTML += '<span class="enquiry-card__badge">' + escapeHtml(String(row.event_type)) + '</span>';
-    }
-    if (row.event_date) {
-      metaHTML += '<span>Event: ' + escapeHtml(String(row.event_date)) + '</span>';
-    }
+    var eventType = enquiryLabel('event_type', row.event_type);
+    var eventDate = row.event_date ? formatEnquiryEventDate(row.event_date) : null;
 
+    var metaHTML = submittedStr ? '<span>Received ' + escapeHtml(submittedStr) + '</span>' : '';
+    if (eventType) metaHTML += '<span class="enquiry-card__badge">' + escapeHtml(eventType) + '</span>';
+    if (eventDate) metaHTML += '<span>Event: ' + escapeHtml(eventDate) + '</span>';
+
+    var email = row.email ? String(row.email) : '';
+    var phone = row.phone ? String(row.phone) : '';
+
+    // [label, plain value, full width?, pre-built safe HTML (optional)]
     var fields = [
-      ['Phone',            row.phone,            false],
-      ['Email',            row.email,            false],
-      ['Event Date',       row.event_date,       false],
-      ['Event Type',       row.event_type,       false],
-      ['Venue / Location',  row.venue_location,   false],
-      ['Number of Events', row.number_of_events, false],
-      ['Services',         services.length ? services.join(', ') : null, false],
-      ['Event Details',    row.event_details,    true],
-      ['Menu Type',        row.menu_type,        false],
-      ['Preferred Menu',   row.menu_preference,  false],
-      ['Dietary Notes',    row.dietary_notes,    true],
-      ['Décor Theme',      row.decor_theme,      true],
-      ['Venue Confirmed',  row.venue_confirmed,  false],
-      ['Venue Name',       row.venue_name,       false],
-      ['Guest Count',      row.guest_count,      false],
-      ['Budget',           row.budget,           false],
-      ['Additional Notes', row.additional_notes, true]
+      ['Email', email, false, email
+        ? '<a href="mailto:' + escapeHtml(email) + '">' + escapeHtml(email) + '</a>' : null],
+      ['Phone', phone, false, phone
+        ? '<a href="tel:' + escapeHtml(phone.replace(/[^\d+]/g, '')) + '">' + escapeHtml(phone) + '</a>' : null],
+      ['Event Type',       eventType,                                   false],
+      ['Event Date',       eventDate,                                   false],
+      ['Venue / Location', row.venue_location,                          false],
+      ['Number of Events', row.number_of_events,                        false],
+      ['Guest Count',      row.guest_count,                             false],
+      ['Venue Confirmed',  enquiryLabel('venue_confirmed', row.venue_confirmed), false],
+      ['Venue Name',       row.venue_name,                              false],
+      ['Services',         services.length ? services.join(', ') : null, true],
+      ['Menu Type',        enquiryLabel('menu_type', row.menu_type),    false],
+      ['Preferred Menu',   enquiryLabel('menu_preference', row.menu_preference), false],
+      ['Dietary Notes',    row.dietary_notes,                           true],
+      ['Décor Theme',      row.decor_theme,                             true],
+      ['Budget',           row.budget,                                  false],
+      ['Event Details',    row.event_details,                           true],
+      ['Additional Notes', row.additional_notes,                        true]
     ];
 
     var fieldsHTML = fields
-      .filter(function (f) { return f[1]; })
+      .filter(function (f) { return f[1] !== null && f[1] !== undefined && f[1] !== ''; })
       .map(function (f) {
         var cls = 'enquiry-field' + (f[2] ? ' enquiry-field--full' : '');
         return '<div class="' + cls + '">'
           + '<span class="enquiry-field__label">' + escapeHtml(f[0]) + '</span>'
-          + '<span class="enquiry-field__value">' + escapeHtml(String(f[1])) + '</span>'
+          + '<span class="enquiry-field__value">' + (f[3] || escapeHtml(String(f[1]))) + '</span>'
           + '</div>';
       })
       .join('');
 
     var archived = !!row.archived;
+    var safeId = escapeHtml(id);
+    var bodyId = 'enquiry-body-' + safeId;
 
-    return '<div class="enquiry-card' + (archived ? ' is-archived' : '') + '">'
-      + '<div class="enquiry-card__header">'
+    return '<div class="enquiry-card' + (archived ? ' is-archived' : '') + (isOpen ? ' is-open' : '') + '" data-id="' + safeId + '">'
+      + '<div class="enquiry-card__header" role="button" tabindex="0" aria-expanded="' + isOpen + '" aria-controls="' + bodyId + '">'
       + '<div class="enquiry-card__info">'
       + '<div class="enquiry-card__name">' + escapeHtml(row.full_name || 'Unknown') + '</div>'
       + '<div class="enquiry-card__meta">' + metaHTML + '</div>'
       + '</div>'
       + '<div class="enquiry-card__actions">'
-      + '<button class="enquiry-card__action-btn enquiry-archive-btn" data-id="' + escapeHtml(String(row.id)) + '" data-archived="' + archived + '">' + (archived ? 'Restore' : 'Archive') + '</button>'
-      + '<button class="enquiry-card__action-btn enquiry-card__action-btn--delete enquiry-delete-btn" data-id="' + escapeHtml(String(row.id)) + '">Delete</button>'
+      + '<button type="button" class="enquiry-card__action-btn enquiry-archive-btn" data-id="' + safeId + '" data-archived="' + archived + '">' + (archived ? 'Restore' : 'Archive') + '</button>'
+      + '<button type="button" class="enquiry-card__action-btn enquiry-card__action-btn--delete enquiry-delete-btn" data-id="' + safeId + '">Delete</button>'
       + '</div>'
-      + '<svg class="enquiry-card__chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6,9 12,15 18,9"/></svg>'
+      + '<svg class="enquiry-card__chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="6,9 12,15 18,9"/></svg>'
       + '</div>'
-      + '<div class="enquiry-card__body">'
+      + '<div class="enquiry-card__body" id="' + bodyId + '">'
       + '<div class="enquiry-fields">' + fieldsHTML + '</div>'
       + '</div>'
       + '</div>';
