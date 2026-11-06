@@ -46,7 +46,8 @@ Per the CSS spec, those properties turn the element into a new containing block 
 - Database/CMS: Supabase JS SDK loaded via CDN
 - Forms: Netlify Forms (zero email backend code)
 - Reviews: **Elfsight Google Reviews widget** (CDN embed — no server-side code, no API key needed)
-- **Netlify plan: Pro** — Functions are available if ever needed (not currently used; `/netlify/functions/reviews.js` was removed when switching to Elfsight)
+- **Netlify plan: Pro** — one Function in use: `netlify/functions/submission-created.js` (enquiry emails via Resend — see Contact Form). `/netlify/functions/reviews.js` was removed when switching to Elfsight.
+- **Email: Resend** (account **jaydenmistry713@gmail.com** — Jayden's own account, using one of its domain slots). Sending domain `sbwevents.co.uk`, from `website@sbwevents.co.uk` (send-only, **no mailbox** — Reply-To is always the customer).
 
 ## Local Development
 **Files use root-relative paths — they MUST be served from a local server, not opened directly.**
@@ -54,7 +55,12 @@ Per the CSS spec, those properties turn the element into a new containing block 
 **VS Code Live Server** or `python -m http.server 8080` → http://localhost:8080
 
 ### Environment Variables
-No environment variables required — the Elfsight widget is a client-side CDN embed with no API key.
+Set in Netlify → Project configuration → Environment variables (never committed):
+- `RESEND_API_KEY` (required for enquiry emails) — from the Resend account jaydenmistry713@gmail.com
+- `ENQUIRY_EMAIL_TO` (optional, comma-separated) — defaults to `SBWevents@outlook.com`; set to `jayden@buildsbyleo.com` while testing, then delete it
+- `ENQUIRY_EMAIL_FROM` (optional) — defaults to `SBW Events Website <website@sbwevents.co.uk>`
+
+The Elfsight widget needs no key.
 
 ---
 
@@ -107,6 +113,8 @@ No environment variables required — the Elfsight widget is a client-side CDN e
     contact-form.js       — Conditional show/hide logic; Netlify fetch submit; URL param pre-fill
     gallery.js            — Supabase fetch, lightbox (prev/next/Esc/overlay) — no filter logic
     admin.js              — Supabase Auth, gallery CRUD, menu editor, text editor, enquiries viewer
+  /netlify/functions/
+    submission-created.js — Enquiry email via Resend (auto-triggered by Netlify Forms; no dependencies)
     supabase-config.js    — Supabase client init (credentials filled in)
 ```
 
@@ -192,7 +200,7 @@ Client uploads via `/admin/gallery.html` are never assumed to be pre-compressed 
 2. ~~**Supabase tables**~~ — Done. `gallery_images`, `catering_menus`, `editable_texts` created; storage bucket `gallery` created; RLS set up. **Client CMS user** (SBWevents@outlook.com) re-created 2026-11-06 via Auth → Users → Add user (Auto Confirm) with a password she chose; Jayden keeps his own separate login. Public sign-ups disabled the same day.
    - **`enquiries` table** — RLS + anon INSERT + authenticated SELECT policies, `GRANT INSERT ON public.enquiries TO anon` and `GRANT SELECT ON public.enquiries TO authenticated`. **Long-standing 403/RLS issue (flagged since original build) fixed 2026-07-23** — `SELECT count(*) FROM public.enquiries` showed 0 real rows had ever saved. Root cause was never actually a missing/broken INSERT policy (the original `enquiries_insert` policy was fine); **it only ever looked broken when a request also asked Postgres to return the inserted row** (`Prefer: return=representation`, or supabase-js `.insert().select()`) — that makes Postgres additionally enforce a SELECT policy on the new row, and `anon` was only ever granted INSERT, not SELECT, so the RETURNING clause failed with the exact same generic RLS error text, masking the fact that a plain `.insert()` (no `.select()`) — which is what `contact-form.js` actually calls — was fine all along. **Do not add `.select()` to the anon-facing insert in `contact-form.js`** — it would immediately reintroduce this failure. A duplicate pair of policies (`Allow anon insert` / `Allow authenticated select`) was added on top of the pre-existing `enquiries_insert` / `enquiries_select` during this debugging session; they're redundant but harmless (multiple permissive policies are OR'd) and were left in place rather than risk breaking anything by removing them.
    - **Residual per-visitor gap (not a code bug, confirmed 2026-07-23):** some browsers with ad blockers / tracking-prevention (e.g. the client's own daily-driver browser) silently block the client-side `fetch` from the live production domain straight to `*.supabase.co`, so that specific visitor's enquiry never mirrors into `enquiries`/the admin dashboard — reproduced live: same code + same Supabase project succeeded from a plain `curl` and from `localhost`, but failed every time from the live HTTPS domain in that one browser, and succeeded again from a different browser on the same machine. This can't be fixed from the codebase (it's the visitor's own client blocking a cross-origin fetch). **The Netlify Forms email notification is unaffected** (same-origin POST to `/`, not blocked by the same tooling) and remains the reliable channel for every enquiry — the admin dashboard should be treated as a convenience mirror, not the sole source of truth, until/unless this is moved server-side.
-3. **Netlify** — ~~Connect repo~~ Done: project `sbweventslive` (Pro plan), auto-deploys from `master`. Form notification for `enquiry` is set **temporarily to jayden@buildsbyleo.com for testing** (2026-11-02) — **switch to (or add) SBWevents@outlook.com before handover.**
+3. **Netlify** — ~~Connect repo~~ Done: project `sbweventslive` (Pro plan), auto-deploys from `master`. Netlify's form notification goes to Jayden's Gmail (Netlify won't allow non-team-member addresses). **Client enquiry emails go via Resend instead** (see Contact Form) — to finish: verify `sbwevents.co.uk` in Resend (DNS records in Squarespace), set `RESEND_API_KEY` + test `ENQUIRY_EMAIL_TO=jayden@buildsbyleo.com`, test, then remove `ENQUIRY_EMAIL_TO` so it defaults to SBWevents@outlook.com.
 4. ~~**Google Reviews**~~ — Done. Elfsight widget embedded in `index.html` (app `72ea1c53-…`). Note it renders via JS, so review text may not be indexed by Google (see SEO Backlog).
 5. **Replace stock images** — Client uploads real photos via admin CMS (`/admin/gallery.html`)
 6. **About page content** — Client supplies real team story and portrait photo
@@ -210,7 +218,7 @@ Every `<form>` element must include:
 - `<input type="hidden" name="form-name" value="[form-name]">`
 - Zero email code — Netlify handles all routing
 
-Contact form: `name="enquiry"`, forwards to SBWevents@outlook.com (set in Netlify dashboard).
+Contact form: `name="enquiry"` — emailed to SBWevents@outlook.com by `netlify/functions/submission-created.js` via Resend (not the Netlify dashboard notification; see Contact Form).
 
 ---
 
@@ -343,7 +351,8 @@ Open questions for the client: (a) which town/city they're actually based in —
 - Thank-you div `#form-thankyou` shown on success; form hidden
 - URL params: `?service=event-planning|event-management|bespoke-decor|catering` pre-checks the matching service checkbox (and, for décor/catering, the package dropdown) — no longer touches Event Type, since Services Required is always visible
 - **Conditional sections use `disabled` on hidden inputs** — `showSection()` enables all child inputs, `hideSection()` disables them. Disabled inputs are excluded from FormData entirely, so Netlify's email only shows fields the user actually filled in. All conditional sections are initialised as disabled on page load — **except** `#services-section` ("Services Required") and `#planning-section` ("Venue Details"), which carry `is-visible` directly in the HTML and are excluded from the disable-on-load loop, so they always show and their inputs are always enabled, regardless of Event Type or navigation path (fixed 2026-07-23 — previously they only appeared for wedding-type Event Types or via a `?service=` link from the services pages). `handleEventTypeChange()` now only toggles `#corporate-section`; it no longer touches Services Required or Venue Details.
-- **Netlify form email body cannot be customised** — regardless of plan tier, Netlify's form notification emails have a fixed plain-text body. Only the subject line and recipient can be configured in the dashboard. To get HTML-designed emails in future, the path is: Netlify Function triggered by form submission → Outlook SMTP (`smtp.office365.com`, `SBWevents@outlook.com`) → custom HTML template.
+- **Enquiry emails (Resend, added 2026-11-06):** Netlify's own form notifications can now only go to Netlify *team members* (non-Enterprise plans), so SBWevents@outlook.com couldn't be added there. Instead `netlify/functions/submission-created.js` runs automatically after every verified (non-spam) Netlify Forms submission, and for `form_name === 'enquiry'` POSTs a branded HTML + plain-text email to the Resend API (plain `fetch`, no npm). Sections/labels mirror the form fields and option values in `contact.html` — **if you add/rename a form field or option, update `LABELS` / `buildSections()` in the function too**, or it won't appear in the email. Empty fields/sections are dropped; all customer input is HTML-escaped. Reply-To = the customer's email; buttons for Reply / Call / WhatsApp (UK numbers normalised to 44…); mobile layout stacks via a `max-width:620px` media query. Uses `Idempotency-Key: enquiry-<submission id>` so a re-delivered event can't double-send. Errors are logged (Netlify → Logs → Functions → submission-created). The old Netlify email notification (to Jayden's Gmail) can stay as a backup.
+- **Private files:** because the repo root is the publish dir, `netlify.toml` 404s `/netlify/*`, `/CLAUDE.md`, `/fix_encoding.py` and the PRD/old-CLAUDE docs. Add a rule if you commit other internal files at the root.
 - **Décor/Catering is a single checkbox + dropdown** (`#cb-decor-catering` → reveals `#decor-catering-package-section` with a "Food & Décor" / "Décor Only" select, `name="decor_catering_package"`) — added 2026-07-23 because catering is never sold as a stand-alone service. Event Planning and Event Management remain separate checkboxes. The dropdown value drives which of `#decor-section` / `#catering-section` show, mirroring the old separate-checkbox behaviour.
 - **General fields added 2026-07-23**: `venue_location` (free text, always visible, next to Event Type), `number_of_events` (select 1/2/3/4+, for people enquiring about multiple functions), `menu_preference` (optional Menu 1/Menu 2 select inside the catering sub-section, distinct from the existing Buffet/Table Service `menu_type` radio), `budget` (free text, placed near the end of the form before Additional Notes).
 - **Guest Count** (`#guest-count`, `name="guest_count"`): required (was optional and labelled "Approximate Guest Count" until 2026-07-23) — now just "Guest Count" with the `required` attribute, and moved to sit directly after Venue/Location & Number of Events and before the Services Required section (was previously after Venue Details, near the end of the form).
@@ -405,8 +414,8 @@ Open questions for the client: (a) which town/city they're actually based in —
 - Do not use React, Vue, Next.js, Svelte, or any JS framework
 - Do not use Tailwind, Bootstrap, or any CSS framework
 - Do not use jQuery or any JS library except Supabase SDK (CDN)
-- Do not use Node.js, Express, or any server-side runtime
-- Do not write any email sending code — Netlify Forms handles this
+- Do not use Node.js, Express, or any server-side runtime — **sole approved exception:** the dependency-free `netlify/functions/submission-created.js` (enquiry emails, approved by Jayden 2026-11-06)
+- Do not add other email-sending code — enquiry emails go through that one function
 - Do not use inline styles except for truly dynamic JS-set values
 - Do not add npm, yarn, package.json, or any build step
 - Do not open HTML files directly in the browser — serve via local server

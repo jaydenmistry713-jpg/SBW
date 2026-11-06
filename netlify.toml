@@ -4,6 +4,38 @@
 [images]
   remote_images = ["^https://ryvmutpznmjphyghmqvu\\.supabase\\.co/storage/v1/object/public/.*"]
 
+# The repo root is the publish directory, so keep internal files private.
+# (Functions are deployed separately — their source shouldn't be downloadable.)
+[[redirects]]
+  from = "/netlify/*"
+  to = "/404.html"
+  status = 404
+  force = true
+
+[[redirects]]
+  from = "/CLAUDE.md"
+  to = "/404.html"
+  status = 404
+  force = true
+
+[[redirects]]
+  from = "/fix_encoding.py"
+  to = "/404.html"
+  status = 404
+  force = true
+
+[[redirects]]
+  from = "/CLAUDE.md%20%E2%80%94%20SBW%20Events%20v3.txt"
+  to = "/404.html"
+  status = 404
+  force = true
+
+[[redirects]]
+  from = "/SBW%20Events%20%E2%80%93%20PRD%20v3.docx"
+  to = "/404.html"
+  status = 404
+  force = true
+
 # Send the default Netlify subdomain to the custom domain so Google only
 # indexes one copy of the site. (www -> apex is handled by Netlify's primary
 # domain setting.) Requires HTTPS to be active on sbwevents.co.uk.
