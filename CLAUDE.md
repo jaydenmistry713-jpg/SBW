@@ -10,6 +10,7 @@ SBW Events website for sbwevents.co.uk. Family-run weddings and events business 
 **Phone:** +44 7831 322188  
 **Instagram:** @shadibiyahwale  
 **Built by:** Jayden Mistry, first under Mistuzzo Marketing. **Since 2026-11-07 the client is a Builds by Leo client** (Jayden Mistry trading as Builds by Leo). The studio's own standing context is `C:\Users\jayde\Desktop\buildsbyleo\CLAUDE.md`, and invoices follow its `INVOICES.md`.  
+**Client contact:** Sumayyah.  
 **CRM:** lead `fnft4fah` ("SBW Events", status won) in the Builds by Leo admin console. Read or update it with `node C:/Users/jayde/Desktop/buildsbyleo/site/scripts/crm.mjs show fnft4fah`.  
 **Footer credit:** every public page's `.footer-bottom` has a `.footer-credit` line, "Website by Builds by Leo ↗", linking to https://buildsbyleo.com (replaced the old Mistuzzo Marketing link 2026-11-06; styles in `nav.css`)
 
