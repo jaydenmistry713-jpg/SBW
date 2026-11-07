@@ -27,7 +27,7 @@ SBW Events website for sbwevents.co.uk. Family-run weddings and events business 
 - **Jayden has told the client that a full page refresh costs £15.** Quote that figure for any refresh request, and never a different one without asking Jayden first.
 
 ## Launch reel (made 2026-11-07)
-A 7.6s Instagram reel announcing the site lives OUTSIDE this repo, at `Desktop/websites/SBW launch reel/`, because anything in this folder gets published. It shows the real décor photo `images/IMG_6108` animated by Higgsfield Kling 3.0 (a dolly through the arch, no people), the live mobile site scrolling on a phone, and an end card with "Website by Builds by Leo" (remove it if SBW posts it themselves). No guest faces and no named welcome signs were animated. Silent; music is added in Instagram.
+Two Instagram reels announcing the site live OUTSIDE this repo, at `Desktop/websites/SBW launch reel/`, because anything in this folder gets published: a 7.6s cut and a **15s cut (Jayden's pick)** that also swipes through Services, Gallery, About and Contact while the address types each path. Both open on the real décor photo `images/IMG_6108` animated by Higgsfield Kling 3.0 (a dolly through the arch, no people), show the mobile site on a phone, and close on an end card with "Website by Builds by Leo" (remove it if SBW posts it themselves). No guest faces and no named welcome signs were animated. Silent; music is added in Instagram.
 
 ---
 
