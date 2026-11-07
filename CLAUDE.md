@@ -9,13 +9,21 @@ SBW Events website for sbwevents.co.uk. Family-run weddings and events business 
 **Display emails:** SBWevents@outlook.com + shadibiyahwale@outlook.com  
 **Phone:** +44 7831 322188  
 **Instagram:** @shadibiyahwale  
-**Built by:** Mistuzzo Marketing (Jayden Mistry)  
+**Built by:** Jayden Mistry, first under Mistuzzo Marketing. **Since 2026-11-07 the client is a Builds by Leo client** (Jayden Mistry trading as Builds by Leo). The studio's own standing context is `C:\Users\jayde\Desktop\buildsbyleo\CLAUDE.md`, and invoices follow its `INVOICES.md`.  
+**CRM:** lead `fnft4fah` ("SBW Events", status won) in the Builds by Leo admin console. Read or update it with `node C:/Users/jayde/Desktop/buildsbyleo/site/scripts/crm.mjs show fnft4fah`.  
 **Footer credit:** every public page's `.footer-bottom` has a `.footer-credit` line, "Website by Builds by Leo ↗", linking to https://buildsbyleo.com (replaced the old Mistuzzo Marketing link 2026-11-06; styles in `nav.css`)
 
 ### Pending client message — Asian identity direction
 > Hey! Just a heads up on a change we made — the site previously mentioned Asian weddings quite heavily throughout, but we felt it was making things seem too niche and could put off potential clients from other backgrounds. We've broadened the language across the site so it now reads as weddings and events for everyone, while still keeping a nod to South Asian expertise in the About section.
 >
 > When you have a look at the demo, let us know — are you happy with that direction, or would you prefer we lean back into the Asian weddings angle more?
+
+---
+
+## Commercial terms (recorded 2026-11-07, from Jayden)
+- **Build price £260.** £130 deposit **paid**; the £130 balance is **still awaited** (a CRM follow-up is set for Fri 13 Nov 2026 to check it).
+- **£48/year** after the first 12 months.
+- **Jayden has told the client that a full page refresh costs £15.** Quote that figure for any refresh request, and never a different one without asking Jayden first.
 
 ---
 
