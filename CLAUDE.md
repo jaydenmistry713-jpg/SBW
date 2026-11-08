@@ -52,13 +52,28 @@ Per the CSS spec, those properties turn the element into a new containing block 
 - No frameworks (no React, Vue, Next.js, Angular, Svelte)
 - No CSS frameworks (no Tailwind, Bootstrap)
 - No jQuery
-- No build tools, no bundlers, no npm, no package.json
+- No build tools, no bundlers, no npm, no package.json — **ONE exception (2026-11-08, Jayden's call):** `package.json` lists `@netlify/blobs` for the `/dashboard` statistics functions only. Netlify installs it when it builds from GitHub; there is still no build step, and nothing on the public site uses it. Do not add a second package, and never add `"type": "module"` (it would turn `submission-created.js` into an ES module and break enquiry emails).
 - Plain HTML5, CSS3, vanilla JavaScript (ES6+) in IIFEs
 - Hosting: Netlify (static site)
 - Database/CMS: Supabase JS SDK loaded via CDN
 - Forms: Netlify Forms (zero email backend code)
 - Reviews: **Elfsight Google Reviews widget** (CDN embed — no server-side code, no API key needed)
-- **Netlify plan: Pro** — one Function in use: `netlify/functions/submission-created.js` (enquiry emails via Resend — see Contact Form). `/netlify/functions/reviews.js` was removed when switching to Elfsight.
+- **Netlify plan: Pro** — Functions: `netlify/functions/submission-created.js` (enquiry emails via Resend — see Contact Form), plus the three visitor-statistics functions (`visit.mjs`, `stats-api.mjs`, `stats-compact.mjs` — see "Visitor statistics"). `/netlify/functions/reviews.js` was removed when switching to Elfsight.
+
+## Visitor statistics — `/dashboard` (built 2026-11-08)
+**Jayden's own dashboard, not the client's.** It is not linked from `/admin` or anywhere else, and Sumayyah is not told about it. One password, no username: the `DASHBOARD_PASSWORD` env var, which Jayden sets in Netlify himself. Until it is set, `/dashboard` cannot be signed in to (the API answers 503).
+
+- **It is a copy of the Punjabi Folk Entertainment dashboard** (Reena, `punjabifolkentertainment.com/dashboard`, Netlify `beamish-baklava-7f1b21`). `dashboard.html` and `js/visit.js` were copied from that live site and changed only for SBW's name, green/cream palette, Cormorant Garamond + Inter, page names and storage keys (`sbw-dashboard-token`, `sbw-stats-ignore`). **Its server code was NOT reachable** (it lives on Jayden's other machine and Netlify does not serve function source), so `netlify/functions/visit.mjs`, `stats-api.mjs`, `stats-compact.mjs` and `netlify/lib/stats-core.mjs` were written fresh to return exactly what the page reads. If the originals turn up, compare before replacing anything.
+- **What it shows:** visitors, page views, pages per visitor, time on site, bounce rate, enquiries, conversion rate, call/email/WhatsApp taps; a chart by hour/day/week/month; pages (views, time, landings, enquiry rate); sources, types and UTM campaigns; landing pages; town and country; device, browser and system; enquiries by event type and link taps; a weekday × hour heatmap; the last 20 journeys that ended in an enquiry; a comparison period; click-to-filter; "Don't count my visits on this browser".
+- **How a visit is counted (privacy):** no cookies, nothing stored on the visitor's device. A visitor is a 16-character hash of a random salt for the UK day + IP address + user agent, so each person counts once per day. **The salt is deleted the morning after** (`stats-compact`), so a past day's codes cannot be tied back to anyone. The IP address and user agent are never stored; of the referrer only the host is kept; town and country come from Netlify's lookup of the connection. Journeys hold page names, source, device and town, never anything typed into the form. Bots and headless browsers are skipped.
+- **Storage:** Netlify Blobs store `site-stats`. `e/<UK day>/<id>` one blob per event (no read-modify-write on the visitor's path, so nothing is lost when two land at once); `d/<UK day>` the whole finished day, folded nightly at 03:15 UTC by `stats-compact`, which merges by event id so a half-finished run is safe to repeat; `salt/<day>`; `rl/<hash>` failed sign-ins (8 per 15 minutes per connection). **No TTL**, like Reena's: it holds no personal data.
+- **Sign-in:** the right password returns a signed token the browser keeps (localStorage with "Keep me signed in", otherwise sessionStorage). Every load sends a fresh one, so it lapses after 90 days without a visit. **Changing `DASHBOARD_PASSWORD` signs every device out**, because the password is part of the signing key.
+- **Enquiries are counted** by `js/contact-form.js` calling `window.sbwStats.enquiry(<event type label>)` after the Netlify post succeeds. If the form ever changes, keep that call.
+- **Every public page loads `<script src="/js/visit.js" defer>`** after `main.js` (`404.html` with `data-404`). A new page needs it too; `/admin/*` and `dashboard.html` must never have it.
+- **Paths are stored without `.html`** (`/about.html` and `/about` are one page). `PAGE_NAMES` in `dashboard.html` gives each a name; a new page falls back to its slug, with "Blog: " for posts.
+- **`STATS_START` in `dashboard.html`** is the day counting began; set it to the go-live date if that is not 2026-11-08. The comparison legend uses it to say when a compared period predates the data.
+- **Tests:** `node netlify/test/stats-core.test.mjs` (12 checks: paths, sources, devices, every total, the chart buckets across the clocks changing, filters, journeys). It was also run end to end on 2026-11-08 against a local Blobs server: beacons stored with no IP or UA, bots ignored, the nightly fold and salt deletion, wrong password and bad token 401, filters, and the page at 1440px and 390px with no console errors and no sideways scroll.
+- **Privacy wording:** the site has no privacy page. If one is added, say that visits are counted without cookies and what is kept (pages, source, device, town).
 - **Email: Resend** (account **jaydenmistry713@gmail.com** — Jayden's own account, using one of its domain slots). Sending domain `sbwevents.co.uk`, from `website@sbwevents.co.uk` (send-only, **no mailbox** — Reply-To is always the customer).
 
 ## Local Development

@@ -199,6 +199,13 @@
       }
       // The admin-dashboard copy is saved server-side by
       // netlify/functions/submission-created.js (ad blockers can't block it).
+      // Counted for /dashboard (js/visit.js) by the event type chosen, never
+      // anything the visitor typed.
+      try {
+        var typeSel = form.querySelector('[name="event_type"]');
+        var typeText = typeSel && typeSel.selectedIndex > 0 ? typeSel.options[typeSel.selectedIndex].text : '';
+        if (window.sbwStats) window.sbwStats.enquiry(typeText);
+      } catch (err) { /* statistics must never get in the way of an enquiry */ }
       showThankyou();
     })
     .catch(function () {

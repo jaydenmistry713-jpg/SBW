@@ -1,0 +1,1147 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Site Statistics | SBW Events</title>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!--
+      Visitor statistics dashboard, for Jayden only (not linked from /admin, which is
+      the client's). Password-gated by netlify/functions/stats-api.mjs (DASHBOARD_PASSWORD
+      env var, no username). Standalone on purpose: it loads none of the site CSS and not
+      js/visit.js, so viewing it is never counted as a visit. Data comes from js/visit.js
+      on every public page. Copied on 2026-11-08 from the Punjabi Folk Entertainment
+      dashboard; colours, fonts, names and page list changed. See CLAUDE.md
+      "Visitor statistics".
+    -->
+    <style>
+        :root {
+            color-scheme: light;
+            --brand: #2D5016;
+            --brand-dark: #1E3510;
+            --brand-wash: #EEF3E8;
+            --ink: #1A1A1A;
+            --ink-2: #4E4E4A;
+            --ink-3: #6E6E68;
+            --line: #E8E0D5;
+            --grid: #F0EBE3;
+            --surface: #FFFFFF;
+            --page: #FAF7F2;
+            --good: #1E7A46;
+            --bad: #B4232F;
+            --radius: 10px;
+            --font-display: 'Cormorant Garamond', Georgia, serif;
+            --font-ui: 'Inter', system-ui, sans-serif;
+        }
+        * { box-sizing: border-box; }
+        body { margin: 0; background: var(--page); color: var(--ink); font: 15px/1.5 var(--font-ui); }
+        h1, h2 { font-family: var(--font-display); font-weight: 600; margin: 0; letter-spacing: -0.01em; }
+        button, input, select { font: inherit; color: inherit; }
+        button { cursor: pointer; }
+        :focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+        [hidden] { display: none !important; }
+
+        /* Sign-in */
+        .login { min-height: 100vh; display: grid; place-items: center; padding: 16px; }
+        .login form { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 2rem; width: min(100%, 380px); box-shadow: 0 10px 30px rgba(30, 40, 20, 0.06); }
+        .login h1 { font-size: 1.5rem; margin-bottom: 0.25rem; }
+        .login p { margin: 0 0 1.25rem; color: var(--ink-2); }
+        .login label { display: block; font-weight: 600; margin-bottom: 0.35rem; }
+        .login input { width: 100%; padding: 0.7rem 0.8rem; border: 1px solid var(--line); border-radius: 8px; background: #fff; }
+        .login .error { color: var(--bad); margin: 0.75rem 0 0; min-height: 1.5em; }
+        .login .remember { display: flex; align-items: center; gap: 0.5rem; margin: 0.9rem 0 0; font-weight: 400; color: var(--ink-2); cursor: pointer; }
+        .login .remember input { width: 16px; height: 16px; padding: 0; accent-color: var(--brand); }
+        .visually-hidden { position: absolute !important; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); border: 0; }
+        .btn-primary { margin-top: 1rem; width: 100%; padding: 0.75rem; border: 0; border-radius: 8px; background: var(--brand); color: #fff; font-weight: 700; }
+        .btn-primary:hover { background: var(--brand-dark); }
+
+        /* Layout */
+        .wrap { max-width: 1280px; margin: 0 auto; padding: 0 16px 4rem; }
+        .topbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.75rem 1.5rem; padding: 1.25rem 0 1rem; }
+        .topbar h1 { font-size: 1.6rem; }
+        .topbar .sub { color: var(--ink-3); font-size: 0.9rem; }
+        .top-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 1rem; }
+        .live { display: inline-flex; align-items: center; gap: 0.45rem; font-weight: 600; color: var(--ink-2); }
+        .live-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--good); box-shadow: 0 0 0 3px rgba(30, 122, 70, 0.18); }
+        .switch { display: inline-flex; align-items: center; gap: 0.45rem; color: var(--ink-2); font-size: 0.9rem; cursor: pointer; }
+        .switch input { accent-color: var(--brand); width: 16px; height: 16px; }
+        .link-btn { background: none; border: 0; padding: 0.25rem 0; color: var(--brand); font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
+
+        .controls { display: flex; flex-wrap: wrap; gap: 0.75rem 1.25rem; align-items: center; padding: 0.75rem 0 1rem; border-top: 1px solid var(--line); }
+        .seg { display: inline-flex; flex-wrap: wrap; background: var(--surface); border: 1px solid var(--line); border-radius: 9px; padding: 3px; gap: 2px; }
+        .seg button { border: 0; background: none; padding: 0.4rem 0.7rem; border-radius: 6px; color: var(--ink-2); font-weight: 600; font-size: 0.88rem; white-space: nowrap; }
+        .seg button:hover { background: var(--brand-wash); color: var(--ink); }
+        .seg button[aria-pressed="true"] { background: var(--brand); color: #fff; }
+        .seg button:disabled { opacity: 0.4; cursor: default; background: none; }
+        .custom { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 0.4rem; font-size: 0.9rem; color: var(--ink-2); }
+        .custom input { padding: 0.35rem 0.5rem; border: 1px solid var(--line); border-radius: 7px; background: #fff; }
+        .ctl-label { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-3); font-weight: 700; margin-right: 0.4rem; }
+        .range-note { color: var(--ink-3); font-size: 0.88rem; }
+
+        .filters { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; margin-bottom: 1rem; }
+        .chip { display: inline-flex; align-items: center; gap: 0.4rem; background: var(--brand-wash); border: 1px solid #CFDDBF; color: var(--brand-dark); border-radius: 999px; padding: 0.3rem 0.4rem 0.3rem 0.8rem; font-weight: 600; font-size: 0.88rem; }
+        .chip button { border: 0; background: rgba(45, 80, 22, 0.12); color: var(--brand-dark); width: 22px; height: 22px; border-radius: 50%; line-height: 1; }
+
+        /* Compare. The selected period is a solid green line, the comparison a dashed grey one. */
+        .compare-legend { display: flex; flex-wrap: wrap; align-items: center; gap: 0.35rem 1.25rem; margin: -0.25rem 0 1rem; font-size: 0.9rem; color: var(--ink-2); }
+        .compare-legend .key { display: inline-flex; align-items: center; gap: 0.45rem; font-weight: 600; color: var(--ink); }
+        .compare-legend .note { flex-basis: 100%; color: var(--ink-3); font-size: 0.85rem; }
+        .sw-line { display: inline-block; width: 22px; height: 0; border-top: 2px solid var(--brand); vertical-align: middle; flex: none; }
+        .sw-line.cmp { border-top: 2px dashed var(--ink-3); }
+        th .sw-line { width: 16px; margin-right: 0.3rem; }
+        .cmp-val { color: var(--ink-3); font-weight: 400; }
+        th.grp { text-align: center; border-bottom: 0; padding-bottom: 0; }
+        thead tr + tr th:first-child { text-align: right; padding-left: 0.5rem; white-space: nowrap; }
+        td.chg { font-size: 0.82rem; color: var(--ink-3); }
+        td.chg.up-good, td.chg.down-good { color: var(--good); }
+        td.chg.up-bad, td.chg.down-bad { color: var(--bad); }
+
+        /* KPI tiles */
+        .kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.75rem; margin-bottom: 1rem; }
+        @media (max-width: 760px) { .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+        .kpi { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 0.9rem 1rem; }
+        .kpi .label { color: var(--ink-2); font-size: 0.85rem; font-weight: 600; display: flex; gap: 0.3rem; align-items: center; }
+        /* lining-nums: Cormorant Garamond draws old-style figures by default, which read unevenly in a number tile. */
+        .kpi .value { font-family: var(--font-display); font-size: 1.75rem; font-weight: 600; line-height: 1.15; margin-top: 0.25rem; font-variant-numeric: lining-nums tabular-nums; }
+        .kpi .values { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 0.6rem; }
+        .kpi .value-cmp { display: inline-flex; align-items: center; gap: 0.35rem; color: var(--ink-3); font-size: 1rem; font-weight: 600; font-variant-numeric: tabular-nums; }
+        .kpi .delta { font-size: 0.82rem; margin-top: 0.15rem; color: var(--ink-3); font-variant-numeric: tabular-nums; }
+        .delta.up-good, .delta.down-good { color: var(--good); }
+        .delta.up-bad, .delta.down-bad { color: var(--bad); }
+        .info { display: inline-grid; place-items: center; width: 15px; height: 15px; border-radius: 50%; border: 1px solid var(--ink-3); color: var(--ink-3); font-size: 10px; font-weight: 700; cursor: help; }
+
+        /* Cards */
+        .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+        .card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 1rem 1.1rem 1.1rem; min-width: 0; }
+        .card.wide { grid-column: 1 / -1; }
+        .card-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 0.5rem 1rem; margin-bottom: 0.75rem; }
+        .card h2 { font-size: 1.15rem; }
+        .card .hint { color: var(--ink-3); font-size: 0.85rem; margin: -0.4rem 0 0.75rem; }
+        /* Wraps so the four chart tabs never push past a narrow phone's edge. */
+        .tabs { display: inline-flex; flex-wrap: wrap; max-width: 100%; gap: 2px; background: var(--page); border-radius: 8px; padding: 3px; }
+        .tabs button { border: 0; background: none; padding: 0.3rem 0.6rem; border-radius: 6px; font-size: 0.85rem; font-weight: 600; color: var(--ink-2); }
+        .tabs button[aria-selected="true"] { background: var(--surface); color: var(--ink); box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08); }
+        @media (max-width: 860px) { .grid { grid-template-columns: minmax(0, 1fr); } }
+
+        /* Chart */
+        .chart-wrap { position: relative; }
+        .chart-wrap svg { display: block; width: 100%; overflow: visible; }
+        .axis text { fill: var(--ink-3); font-size: 11px; font-family: var(--font-ui); font-variant-numeric: tabular-nums; }
+        .tooltip { position: absolute; pointer-events: none; background: var(--ink); color: #fff; border-radius: 8px; padding: 0.45rem 0.6rem; font-size: 0.82rem; line-height: 1.35; white-space: nowrap; transform: translate(-50%, calc(-100% - 12px)); box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18); }
+        .tooltip strong { font-size: 0.95rem; }
+        .tooltip .muted { color: #D6D9CF; }
+        .tooltip .tip-row { display: flex; align-items: center; gap: 0.45rem; }
+        .tooltip .sw-line { width: 16px; border-top-color: #B9CC9E; }
+        .tooltip .sw-line.cmp { border-top-color: #D6D9CF; }
+        details.table-view { margin-top: 0.6rem; }
+        details.table-view summary { cursor: pointer; color: var(--ink-2); font-size: 0.85rem; font-weight: 600; }
+
+        /* Tables */
+        .tbl-scroll { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.9rem; font-variant-numeric: tabular-nums; }
+        th { text-align: right; font-weight: 700; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--ink-3); padding: 0.35rem 0.5rem; border-bottom: 1px solid var(--line); white-space: nowrap; }
+        td { text-align: right; padding: 0.45rem 0.5rem; border-bottom: 1px solid var(--grid); white-space: nowrap; }
+        th:first-child, td:first-child { text-align: left; padding-left: 0; white-space: normal; }
+        td:first-child { position: relative; min-width: 9rem; }
+        td .name { position: relative; font-weight: 600; word-break: break-word; }
+        td .path { display: block; color: var(--ink-3); font-size: 0.78rem; font-weight: 400; word-break: break-all; }
+        td .bar { display: block; height: 3px; border-radius: 2px; background: var(--brand); opacity: 0.55; margin-top: 4px; }
+        tr.clickable { cursor: pointer; }
+        tr.clickable:hover td { background: var(--brand-wash); }
+        .empty { color: var(--ink-3); padding: 1rem 0; text-align: center; }
+        .more-btn { margin-top: 0.5rem; }
+
+        /* Heatmap */
+        .heat { display: grid; grid-template-columns: 2.4rem repeat(24, minmax(0, 1fr)); gap: 2px; font-size: 0.72rem; color: var(--ink-3); }
+        .heat .cell { aspect-ratio: 1; border-radius: 3px; background: var(--grid); min-height: 10px; }
+        .heat .rowlabel { align-self: center; font-weight: 600; }
+        .heat .hourlabel { text-align: center; }
+        .heat-legend { display: flex; align-items: center; gap: 0.4rem; margin-top: 0.6rem; font-size: 0.78rem; color: var(--ink-3); }
+        .heat-legend span.sw { width: 14px; height: 14px; border-radius: 3px; display: inline-block; }
+
+        /* Journeys */
+        .journey { padding: 0.7rem 0; border-bottom: 1px solid var(--grid); }
+        .journey:last-child { border-bottom: 0; }
+        .journey-meta { display: flex; flex-wrap: wrap; gap: 0.25rem 0.9rem; color: var(--ink-2); font-size: 0.85rem; margin-bottom: 0.35rem; }
+        .journey-meta strong { color: var(--ink); }
+        .steps { display: flex; flex-wrap: wrap; align-items: center; gap: 0.3rem; }
+        .step { background: var(--page); border: 1px solid var(--line); border-radius: 6px; padding: 0.15rem 0.5rem; font-size: 0.82rem; font-weight: 600; }
+        .step.goal { background: var(--brand); border-color: var(--brand); color: #fff; }
+        .arrow { color: var(--ink-3); font-size: 0.8rem; }
+
+        .list-simple { list-style: none; margin: 0; padding: 0; }
+        .list-simple li { display: flex; justify-content: space-between; gap: 1rem; padding: 0.4rem 0; border-bottom: 1px solid var(--grid); font-variant-numeric: tabular-nums; }
+        .sub-h { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-3); font-weight: 700; margin: 1rem 0 0.25rem; }
+
+        .status { padding: 2rem 0; text-align: center; color: var(--ink-2); }
+        .loading-veil { opacity: 0.45; transition: opacity 0.15s; pointer-events: none; }
+        .footnote { color: var(--ink-3); font-size: 0.82rem; margin-top: 1.5rem; max-width: 70ch; }
+        @media (max-width: 600px) {
+            .topbar h1 { font-size: 1.35rem; }
+            .kpi .value { font-size: 1.45rem; }
+            .heat { font-size: 0.6rem; grid-template-columns: 1.8rem repeat(24, minmax(0, 1fr)); gap: 1px; }
+        }
+    </style>
+</head>
+<body>
+
+<section class="login" id="login" hidden>
+    <form id="login-form" method="post" action="/dashboard">
+        <h1>Site statistics</h1>
+        <p>SBW Events</p>
+        <!-- Password managers file a saved password under a username; this gives them one. -->
+        <input class="visually-hidden" type="text" name="username" autocomplete="username" value="Statistics dashboard" tabindex="-1" aria-hidden="true">
+        <label for="password">Password</label>
+        <input id="password" name="password" type="password" autocomplete="current-password" required>
+        <label class="remember"><input type="checkbox" id="remember" checked> Keep me signed in on this device</label>
+        <button class="btn-primary" id="sign-in" type="submit">Sign in</button>
+        <p class="error" id="login-error" role="alert"></p>
+    </form>
+</section>
+
+<div class="wrap" id="app" hidden>
+    <header class="topbar">
+        <div>
+            <h1>Site statistics</h1>
+            <div class="sub" id="range-label"></div>
+        </div>
+        <div class="top-actions">
+            <span class="live" id="live" hidden><span class="live-dot" aria-hidden="true"></span><span id="live-text"></span></span>
+            <label class="switch" title="Stops this browser being counted on the website, so your own checks don't inflate the numbers">
+                <input type="checkbox" id="ignore-me"> Don't count my visits on this browser
+            </label>
+            <button class="link-btn" id="refresh" type="button">Refresh</button>
+            <button class="link-btn" id="sign-out" type="button">Sign out</button>
+        </div>
+    </header>
+
+    <div class="controls">
+        <div>
+            <span class="ctl-label">Period</span>
+            <div class="seg" id="ranges" role="group" aria-label="Period">
+                <button type="button" data-range="today">Today</button>
+                <button type="button" data-range="yesterday">Yesterday</button>
+                <button type="button" data-range="7d">7 days</button>
+                <button type="button" data-range="30d">30 days</button>
+                <button type="button" data-range="month">This month</button>
+                <button type="button" data-range="lastmonth">Last month</button>
+                <button type="button" data-range="90d">90 days</button>
+                <button type="button" data-range="12m">12 months</button>
+                <button type="button" data-range="custom">Custom</button>
+            </div>
+        </div>
+        <div class="custom" id="custom" hidden>
+            <label for="from">From</label><input type="date" id="from">
+            <label for="to">to</label><input type="date" id="to">
+        </div>
+        <div>
+            <span class="ctl-label">Show by</span>
+            <div class="seg" id="groups" role="group" aria-label="Show by">
+                <button type="button" data-group="hour">Hour</button>
+                <button type="button" data-group="day">Day</button>
+                <button type="button" data-group="week">Week</button>
+                <button type="button" data-group="month">Month</button>
+            </div>
+        </div>
+        <div>
+            <span class="ctl-label">Compare</span>
+            <div class="seg" id="compares" role="group" aria-label="Compare">
+                <button type="button" data-compare="off">Off</button>
+                <button type="button" data-compare="previous">Previous period</button>
+                <button type="button" data-compare="year">Year before</button>
+                <button type="button" data-compare="custom">Custom</button>
+            </div>
+        </div>
+        <div class="custom" id="cmp-custom" hidden>
+            <label for="cmp-from">Compare with</label><input type="date" id="cmp-from">
+            <label for="cmp-to">to</label><input type="date" id="cmp-to">
+        </div>
+    </div>
+
+    <div class="compare-legend" id="compare-legend" hidden></div>
+
+    <div class="filters" id="filters" hidden></div>
+
+    <div id="status" class="status" hidden></div>
+
+    <main id="content" hidden>
+        <section class="kpis" id="kpis" aria-label="Summary"></section>
+
+        <div class="grid">
+            <section class="card wide">
+                <div class="card-head">
+                    <h2 id="chart-title">Visitors</h2>
+                    <div class="tabs" role="tablist" id="metric-tabs">
+                        <button role="tab" data-metric="visitors">Visitors</button>
+                        <button role="tab" data-metric="views">Page views</button>
+                        <button role="tab" data-metric="enquiries">Enquiries</button>
+                        <button role="tab" data-metric="convRate">Conversion rate</button>
+                    </div>
+                </div>
+                <div class="chart-wrap" id="chart"></div>
+                <details class="table-view"><summary>Show as a table</summary><div class="tbl-scroll" id="chart-table"></div></details>
+            </section>
+
+            <section class="card wide">
+                <div class="card-head"><h2>Pages</h2></div>
+                <p class="hint">Click a page to see only the visitors who viewed it. <em>Enquiry rate</em> is the share of a page's visitors who sent an enquiry.</p>
+                <div class="tbl-scroll" id="pages"></div>
+            </section>
+
+            <section class="card">
+                <div class="card-head">
+                    <h2>Where visitors come from</h2>
+                    <div class="tabs" role="tablist" data-tabs="sources">
+                        <button role="tab" data-tab="sources">Source</button>
+                        <button role="tab" data-tab="channels">Type</button>
+                        <button role="tab" data-tab="campaigns">Campaign</button>
+                    </div>
+                </div>
+                <div class="tbl-scroll" id="sources"></div>
+            </section>
+
+            <section class="card">
+                <div class="card-head"><h2>Landing pages</h2></div>
+                <p class="hint">The first page a visitor saw. Bounce = left after that one page.</p>
+                <div class="tbl-scroll" id="entries"></div>
+            </section>
+
+            <section class="card">
+                <div class="card-head">
+                    <h2>Location</h2>
+                    <div class="tabs" role="tablist" data-tabs="locations">
+                        <button role="tab" data-tab="cities">Town</button>
+                        <button role="tab" data-tab="countries">Country</button>
+                    </div>
+                </div>
+                <div class="tbl-scroll" id="locations"></div>
+            </section>
+
+            <section class="card">
+                <div class="card-head">
+                    <h2>Devices</h2>
+                    <div class="tabs" role="tablist" data-tabs="devices">
+                        <button role="tab" data-tab="devices">Device</button>
+                        <button role="tab" data-tab="browsers">Browser</button>
+                        <button role="tab" data-tab="oses">System</button>
+                    </div>
+                </div>
+                <div class="tbl-scroll" id="devices"></div>
+            </section>
+
+            <section class="card">
+                <div class="card-head"><h2>Enquiries &amp; contact</h2></div>
+                <div id="conversions"></div>
+            </section>
+
+            <section class="card">
+                <div class="card-head"><h2>When visitors arrive</h2></div>
+                <p class="hint">Visitors by day of the week and hour (UK time).<span class="only-selected" hidden> Selected period only.</span></p>
+                <div id="heatmap"></div>
+            </section>
+
+            <section class="card wide">
+                <div class="card-head"><h2>Recent journeys to an enquiry</h2></div>
+                <p class="hint">The pages each visitor saw before sending the contact form, newest first. No names or contact details are recorded here.<span class="only-selected" hidden> Selected period only.</span></p>
+                <div id="journeys"></div>
+            </section>
+        </div>
+
+        <p class="footnote">
+            How this is counted: each person is counted once per day, without cookies (an anonymous code made from their connection and browser, which changes daily), so someone who visits on three days counts as three visitors.
+            Search-engine bots and people who block scripts are not counted. Your own visits are counted unless you tick "Don't count my visits" above on each browser and phone you use.
+            Statistics start from the day this dashboard went live.
+        </p>
+    </main>
+</div>
+
+<script>
+(function () {
+    'use strict';
+
+    var API = '/.netlify/functions/stats-api';
+    // A signed sign-in token from stats-api.mjs, never the password itself: in localStorage
+    // with "Keep me signed in" ticked (lasts until 90 days without a visit), otherwise in
+    // sessionStorage (gone when the tab closes).
+    var TOKEN_KEY = 'sbw-dashboard-token';
+    var IGNORE_KEY = 'sbw-stats-ignore';
+
+    var state = {
+        range: '30d', from: null, to: null, group: 'day', groupTouched: false,
+        // compare: 'off' | 'previous' | 'year' | 'custom'. Off by default, as in Search Console.
+        compare: 'off', cmpFrom: null, cmpTo: null,
+        filter: {}, metric: 'visitors', data: null,
+        tabs: { sources: 'sources', locations: 'cities', devices: 'devices' },
+        pagesAll: false
+    };
+
+    var $ = function (id) { return document.getElementById(id); };
+    var nf = new Intl.NumberFormat('en-GB');
+
+    // Every value from the API that came from a visitor (paths, referrers, campaign names)
+    // is escaped before it reaches innerHTML.
+    function esc(s) {
+        return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+            return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+        });
+    }
+    function pct(x, digits) { return (x * 100).toFixed(digits == null ? 1 : digits).replace(/\.0$/, '') + '%'; }
+    function duration(sec) {
+        sec = Math.round(sec || 0);
+        if (sec < 60) return sec + 's';
+        var m = Math.floor(sec / 60), s = sec % 60;
+        if (m < 60) return m + 'm ' + String(s).padStart(2, '0') + 's';
+        return Math.floor(m / 60) + 'h ' + (m % 60) + 'm';
+    }
+    function safeGet(store, key) { try { return store.getItem(key); } catch (e) { return null; } }
+    function safeSet(store, key, val) { try { if (val == null) store.removeItem(key); else store.setItem(key, val); } catch (e) {} }
+
+    // ---- Dates (UK calendar) -------------------------------------------------
+    var ukDay = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/London', year: 'numeric', month: '2-digit', day: '2-digit' });
+    function today() { return ukDay.format(new Date()); }
+    function addDays(d, n) { var x = new Date(d + 'T00:00:00Z'); x.setUTCDate(x.getUTCDate() + n); return x.toISOString().slice(0, 10); }
+    function daysIn(from, to) { return Math.round((new Date(to + 'T00:00:00Z') - new Date(from + 'T00:00:00Z')) / 86400000) + 1; }
+    function fmtDate(d, opts) { return new Date(d + 'T12:00:00Z').toLocaleDateString('en-GB', Object.assign({ timeZone: 'UTC' }, opts)); }
+
+    function rangeDates(range) {
+        var t = today();
+        switch (range) {
+            case 'today': return [t, t];
+            case 'yesterday': var y = addDays(t, -1); return [y, y];
+            case '7d': return [addDays(t, -6), t];
+            case '30d': return [addDays(t, -29), t];
+            case '90d': return [addDays(t, -89), t];
+            case '12m': return [addDays(t, -364), t];
+            case 'month': return [t.slice(0, 8) + '01', t];
+            case 'lastmonth':
+                var firstThis = t.slice(0, 8) + '01';
+                var lastPrev = addDays(firstThis, -1);
+                return [lastPrev.slice(0, 8) + '01', lastPrev];
+            default: return [state.from || addDays(t, -29), state.to || t];
+        }
+    }
+
+    // The period to compare with. "Previous period" is the same number of days just before,
+    // except for the month presets: last month is compared with the whole month before it,
+    // and this month so far with the same days of last month.
+    function compareDates(from, to) {
+        switch (state.compare) {
+            case 'year': return [minusYear(from), minusYear(to)];
+            case 'custom': if (state.cmpFrom && state.cmpTo) return [state.cmpFrom, state.cmpTo]; // falls through
+            default:
+                var end = addDays(from, -1);
+                if (state.range === 'lastmonth') return [end.slice(0, 8) + '01', end];
+                if (state.range === 'month') {
+                    var start = end.slice(0, 8) + '01', last = addDays(start, daysIn(from, to) - 1);
+                    return [start, last > end ? end : last];
+                }
+                return [addDays(from, -daysIn(from, to)), end];
+        }
+    }
+    function minusYear(d) { var md = d.slice(5); return (Number(d.slice(0, 4)) - 1) + '-' + (md === '02-29' ? '02-28' : md); }
+
+    // Short period names for the legend and table headings: "22 Oct", "16–22 Oct",
+    // "28 Sep – 4 Oct". The year is added when the two periods are in different years.
+    function periodLabel(from, to, withYear) {
+        var end = withYear ? { day: 'numeric', month: 'short', year: 'numeric' } : { day: 'numeric', month: 'short' };
+        if (from === to) return fmtDate(from, end);
+        if (from.slice(0, 7) === to.slice(0, 7)) return fmtDate(from, { day: 'numeric' }) + '–' + fmtDate(to, end);
+        return fmtDate(from, withYear && from.slice(0, 4) !== to.slice(0, 4) ? end : { day: 'numeric', month: 'short' }) + ' – ' + fmtDate(to, end);
+    }
+    function labels(d) {
+        var c = d.compare, withYear = d.from.slice(0, 4) !== c.from.slice(0, 4) || d.to.slice(0, 4) !== c.to.slice(0, 4);
+        return { a: periodLabel(d.from, d.to, withYear), b: periodLabel(c.from, c.to, withYear) };
+    }
+    var STATS_START = '2026-11-08'; // the day counting started on this site: set it to the go-live date
+
+    function defaultGroup(from, to) {
+        var n = daysIn(from, to);
+        if (n === 1) return 'hour';
+        if (n <= 62) return 'day';
+        if (n <= 190) return 'week';
+        return 'month';
+    }
+
+    // ---- Page names ------------------------------------------------------------
+    // Paths arrive without .html (netlify/lib/stats-core.mjs normPath).
+    var PAGE_NAMES = {
+        '/': 'Home', '/about': 'About', '/services': 'Services', '/gallery': 'Gallery',
+        '/contact': 'Contact', '/blog': 'Blog',
+        '/services/event-planning': 'Event Planning', '/services/event-management': 'Event Management',
+        '/services/bespoke-decor': 'Bespoke D\u00e9cor', '/services/catering': 'Catering',
+        '/blog/5-reasons-to-have-a-wedding-coordinator': 'Blog: 5 reasons to have a wedding coordinator',
+        '/blog/catering-for-a-large-guest-list': 'Blog: Catering for a large guest list',
+        '/blog/choosing-a-wedding-venue-in-scotland': 'Blog: Choosing a wedding venue in Scotland',
+        '/blog/make-your-wedding-decor-your-own': 'Blog: Make your wedding d\u00e9cor your own',
+        '/blog/questions-to-ask-before-booking-a-wedding-planner': 'Blog: Questions to ask before booking a planner',
+        '/blog/weddings-and-celebrations-for-every-culture': 'Blog: Weddings for every culture'
+    };
+    function pageName(p) {
+        if (!p) return '(unknown)';
+        if (p.indexOf('404:') === 0) return 'Page not found';
+        if (PAGE_NAMES[p]) return PAGE_NAMES[p];
+        var parts = p.split('/').filter(Boolean);
+        var last = parts[parts.length - 1] || '';
+        var name = last.replace(/-/g, ' ').replace(/\b\w/g, function (c) { return c.toUpperCase(); });
+        return (parts[0] === 'blog' && parts.length > 1 ? 'Blog: ' : '') + name;
+    }
+    function pageCell(p, barPct) {
+        return '<span class="name">' + esc(pageName(p)) + '</span><span class="path">' + esc(p.replace(/^404:/, '')) + '</span>' +
+            (barPct != null ? '<span class="bar" style="width:' + Math.max(1, barPct) + '%"></span>' : '');
+    }
+
+    // ---- API -------------------------------------------------------------------
+    var requestId = 0;
+    function getToken() { return safeGet(localStorage, TOKEN_KEY) || safeGet(sessionStorage, TOKEN_KEY); }
+    function saveToken(token, remember) {
+        safeSet(remember ? localStorage : sessionStorage, TOKEN_KEY, token);
+        safeSet(remember ? sessionStorage : localStorage, TOKEN_KEY, null);
+    }
+    function clearToken() {
+        safeSet(localStorage, TOKEN_KEY, null);
+        safeSet(sessionStorage, TOKEN_KEY, null);
+    }
+
+    // Called with the password only from the sign-in form; every other load uses the token.
+    function load(password) {
+        var token = password ? null : getToken();
+        if (!password && !token) return showLogin('');
+        var dates = rangeDates(state.range);
+        state.from = dates[0];
+        state.to = dates[1];
+        if (!state.groupTouched || (state.group === 'hour' && state.from !== state.to)) state.group = defaultGroup(state.from, state.to);
+        var body = { from: state.from, to: state.to, group: state.group, filter: state.filter };
+        if (password) body.password = password; else body.token = token;
+        if (state.compare !== 'off') {
+            var cmp = compareDates(state.from, state.to);
+            state.cmpFrom = cmp[0];
+            state.cmpTo = cmp[1];
+            body.compare = { from: cmp[0], to: cmp[1] };
+        }
+        syncControls();
+
+        var id = ++requestId;
+        var content = $('content');
+        if (state.data) content.classList.add('loading-veil');
+        else showStatus('Loading statistics…');
+
+        fetch(API, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body)
+        }).then(function (res) {
+            if (res.status === 401) {
+                if (!password) clearToken();
+                throw { auth: password ? 'That password was not accepted.' : 'Your sign-in has expired. Enter the password again.' };
+            }
+            if (!res.ok) throw new Error('HTTP ' + res.status);
+            return res.json();
+        }).then(function (data) {
+            // The API sends a fresh token each time, so a kept sign-in only lapses after
+            // 90 days without a visit.
+            if (data.token) saveToken(data.token, password ? $('remember').checked : !!safeGet(localStorage, TOKEN_KEY));
+            if (password) signedIn(password);
+            if (id !== requestId) return;
+            state.data = data;
+            content.classList.remove('loading-veil');
+            $('status').hidden = true;
+            content.hidden = false;
+            render();
+        }).catch(function (err) {
+            if (id !== requestId) return;
+            content.classList.remove('loading-veil');
+            if (err && err.auth) return showLogin(err.auth);
+            if (password) return signInFailed('Could not reach the server. Check your connection and try again.');
+            console.error(err);
+            showStatus('Could not load the statistics. Check your connection and press Refresh.');
+        });
+    }
+
+    function showStatus(msg) {
+        $('status').textContent = msg;
+        $('status').hidden = false;
+        if (!state.data) $('content').hidden = true;
+    }
+
+    function showLogin(msg) {
+        $('app').hidden = true;
+        $('login').hidden = false;
+        $('sign-in').disabled = false;
+        $('sign-in').textContent = 'Sign in';
+        $('login-error').textContent = msg || '';
+        $('password').value = '';
+        $('password').focus();
+    }
+
+    function signInFailed(msg) {
+        $('sign-in').disabled = false;
+        $('sign-in').textContent = 'Sign in';
+        $('login-error').textContent = msg;
+    }
+
+    // The form is hidden only after the password is accepted, which is what browsers
+    // watch for before offering to save it. Chrome and Edge are also asked directly.
+    function signedIn(password) {
+        if (window.PasswordCredential && navigator.credentials && navigator.credentials.store) {
+            try {
+                navigator.credentials.store(new PasswordCredential({ id: 'Statistics dashboard', name: 'Statistics dashboard', password: password }))
+                    .catch(function () {});
+            } catch (e) {}
+        }
+        $('login').hidden = true;
+        $('app').hidden = false;
+        $('password').value = '';
+        $('sign-in').disabled = false;
+        $('sign-in').textContent = 'Sign in';
+    }
+
+    $('login-form').addEventListener('submit', function (e) {
+        e.preventDefault();
+        var password = $('password').value;
+        if (!password) return;
+        $('sign-in').disabled = true;
+        $('sign-in').textContent = 'Signing in…';
+        $('login-error').textContent = '';
+        load(password);
+    });
+    $('sign-out').addEventListener('click', function () {
+        clearToken();
+        state.data = null;
+        $('content').hidden = true;
+        showLogin('');
+    });
+    $('refresh').addEventListener('click', function () { load(); });
+
+    // ---- Controls ----------------------------------------------------------------
+    function syncControls() {
+        Array.prototype.forEach.call($('ranges').children, function (b) { b.setAttribute('aria-pressed', String(b.dataset.range === state.range)); });
+        Array.prototype.forEach.call($('groups').children, function (b) {
+            b.setAttribute('aria-pressed', String(b.dataset.group === state.group));
+            b.disabled = b.dataset.group === 'hour' ? state.from !== state.to : false;
+        });
+        $('custom').hidden = state.range !== 'custom';
+        $('from').value = state.from; $('to').value = state.to;
+        $('from').max = $('to').max = today();
+        Array.prototype.forEach.call($('compares').children, function (b) { b.setAttribute('aria-pressed', String(b.dataset.compare === state.compare)); });
+        $('cmp-custom').hidden = state.compare !== 'custom';
+        $('cmp-from').value = state.cmpFrom || ''; $('cmp-to').value = state.cmpTo || '';
+        $('cmp-from').max = $('cmp-to').max = today();
+        var label = state.from === state.to ? fmtDate(state.from, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
+            : fmtDate(state.from, { day: 'numeric', month: 'short', year: 'numeric' }) + ' – ' + fmtDate(state.to, { day: 'numeric', month: 'short', year: 'numeric' });
+        $('range-label').textContent = label;
+        renderFilters();
+    }
+
+    $('ranges').addEventListener('click', function (e) {
+        var b = e.target.closest('button'); if (!b) return;
+        state.range = b.dataset.range;
+        state.groupTouched = false;
+        load();
+    });
+    ['from', 'to'].forEach(function (id) {
+        $(id).addEventListener('change', function () {
+            var f = $('from').value, t = $('to').value;
+            if (!f || !t) return;
+            if (f > t) { var x = f; f = t; t = x; }
+            state.from = f; state.to = t; state.range = 'custom';
+            load();
+        });
+    });
+    $('groups').addEventListener('click', function (e) {
+        var b = e.target.closest('button'); if (!b || b.disabled) return;
+        state.group = b.dataset.group;
+        state.groupTouched = true;
+        load();
+    });
+    // Choosing Custom starts from whatever was being compared (or the previous period),
+    // so the date boxes are never empty.
+    $('compares').addEventListener('click', function (e) {
+        var b = e.target.closest('button'); if (!b || b.dataset.compare === state.compare) return;
+        if (b.dataset.compare === 'custom' && state.compare === 'off') { state.cmpFrom = state.cmpTo = null; }
+        state.compare = b.dataset.compare;
+        load();
+    });
+    ['cmp-from', 'cmp-to'].forEach(function (id) {
+        $(id).addEventListener('change', function () {
+            var f = $('cmp-from').value, t = $('cmp-to').value;
+            if (!f || !t) return;
+            if (f > t) { var x = f; f = t; t = x; }
+            state.cmpFrom = f; state.cmpTo = t;
+            load();
+        });
+    });
+    $('metric-tabs').addEventListener('click', function (e) {
+        var b = e.target.closest('button'); if (!b) return;
+        state.metric = b.dataset.metric;
+        renderChart();
+    });
+    document.querySelectorAll('[data-tabs]').forEach(function (group) {
+        group.addEventListener('click', function (e) {
+            var b = e.target.closest('button'); if (!b) return;
+            state.tabs[group.dataset.tabs] = b.dataset.tab;
+            render();
+        });
+    });
+
+    var FILTER_LABELS = { page: 'Viewed', source: 'Source', channel: 'Type', device: 'Device', country: 'Country', city: 'Town' };
+    function setFilter(key, value) {
+        if (state.filter[key] === value) delete state.filter[key];
+        else state.filter[key] = value;
+        load();
+    }
+    function renderFilters() {
+        var keys = Object.keys(state.filter);
+        var box = $('filters');
+        box.hidden = !keys.length;
+        box.innerHTML = keys.map(function (k) {
+            var v = k === 'page' ? pageName(state.filter[k]) : state.filter[k];
+            return '<span class="chip">' + esc(FILTER_LABELS[k]) + ': ' + esc(v) +
+                ' <button type="button" data-remove="' + esc(k) + '" aria-label="Remove filter">×</button></span>';
+        }).join('') + (keys.length > 1 ? '<button type="button" class="link-btn" data-remove="*">Clear all</button>' : '');
+    }
+    $('filters').addEventListener('click', function (e) {
+        var b = e.target.closest('[data-remove]'); if (!b) return;
+        if (b.dataset.remove === '*') state.filter = {};
+        else delete state.filter[b.dataset.remove];
+        load();
+    });
+
+    var ignore = $('ignore-me');
+    ignore.checked = safeGet(localStorage, IGNORE_KEY) === '1';
+    ignore.addEventListener('change', function () { safeSet(localStorage, IGNORE_KEY, ignore.checked ? '1' : null); });
+
+    // ---- Rendering -----------------------------------------------------------------
+    function render() {
+        var d = state.data;
+        if (!d) return;
+        renderLive(d);
+        renderLegend(d);
+        document.querySelectorAll('.only-selected').forEach(function (el) { el.hidden = !d.compare; });
+        renderKpis(d);
+        renderChart();
+        renderPages(d);
+        renderSources(d);
+        renderEntries(d);
+        renderLocations(d);
+        renderDevices(d);
+        renderConversions(d);
+        renderHeatmap(d.heatmap);
+        renderJourneys(d.journeys);
+        document.querySelectorAll('[data-tabs]').forEach(function (g) {
+            Array.prototype.forEach.call(g.children, function (b) { b.setAttribute('aria-selected', String(state.tabs[g.dataset.tabs] === b.dataset.tab)); });
+        });
+    }
+
+    function renderLive(d) {
+        $('live').hidden = d.live == null;
+        if (d.live != null) $('live-text').textContent = d.live === 1 ? '1 visitor in the last 30 min' : nf.format(d.live) + ' visitors in the last 30 min';
+    }
+
+    function renderLegend(d) {
+        var box = $('compare-legend');
+        box.hidden = !d.compare;
+        if (!d.compare) return;
+        var l = labels(d), c = d.compare;
+        var note = c.to < STATS_START ? 'Statistics start on ' + fmtDate(STATS_START, { day: 'numeric', month: 'short', year: 'numeric' }) + ', so the comparison period has no data yet.'
+            : c.from < STATS_START ? 'Statistics start on ' + fmtDate(STATS_START, { day: 'numeric', month: 'short', year: 'numeric' }) + ', so the comparison period is only partly recorded.' : '';
+        box.innerHTML = '<span class="key"><span class="sw-line" aria-hidden="true"></span>' + esc(l.a) + '</span>' +
+            '<span>compared with</span><span class="key"><span class="sw-line cmp" aria-hidden="true"></span>' + esc(l.b) + '</span>' +
+            (note ? '<span class="note">' + esc(note) + '</span>' : '');
+    }
+
+    // Change from the comparison period to the selected one: { text, cls }. Counts change
+    // by percent, rates by percentage points. none is the text when the comparison is 0.
+    function change(cur, prev, kind, betterWhenLower, none) {
+        var text, dir;
+        if (kind === 'rate') {
+            if (cur == null || prev == null) return { text: '–', cls: '' };
+            var pts = (cur - prev) * 100;
+            if (Math.abs(pts) < 0.05) return { text: 'No change', cls: '' };
+            dir = pts > 0 ? 'up' : 'down';
+            text = (pts > 0 ? '▲ ' : '▼ ') + Math.abs(pts).toFixed(1) + ' pts';
+        } else {
+            if (!prev) return { text: cur ? none : '–', cls: '' };
+            var ch = (cur - prev) / prev;
+            if (Math.abs(ch) < 0.005) return { text: 'No change', cls: '' };
+            dir = ch > 0 ? 'up' : 'down';
+            text = (ch > 0 ? '▲ ' : '▼ ') + pct(Math.abs(ch), 0);
+        }
+        var good = betterWhenLower ? dir === 'down' : dir === 'up';
+        return { text: text, cls: dir + (good ? '-good' : '-bad') };
+    }
+
+    function renderKpis(d) {
+        var t = d.totals, p = d.compare && d.compare.totals;
+        var tiles = [
+            ['Visitors', 'visitors', function (x) { return nf.format(x); }, 0, 'People who visited, counted once per day'],
+            ['Page views', 'views', function (x) { return nf.format(x); }, 0, 'Every page opened'],
+            ['Pages per visitor', 'pagesPerVisitor', function (x) { return x.toFixed(1); }, 0, 'Average pages each visitor looked at'],
+            ['Time on site', 'avgTime', duration, 0, 'Average time per visitor with the page on screen'],
+            ['Bounce rate', 'bounceRate', function (x) { return pct(x); }, 'lower', 'Visitors who left after one page'],
+            ['Enquiries', 'enquiries', function (x) { return nf.format(x); }, 0, 'Contact forms sent successfully'],
+            ['Conversion rate', 'conversionRate', function (x) { return pct(x); }, 'rate', 'Share of visitors who sent an enquiry'],
+            ['Call / email / WhatsApp taps', 'contactClicks', function (x) { return nf.format(x); }, 0, 'Taps on the phone number, email address or WhatsApp links. A tap does not prove they went on to call']
+        ];
+        var l = p ? labels(d) : null;
+        $('kpis').innerHTML = tiles.map(function (k) {
+            var html = '<div class="kpi"><div class="label">' + esc(k[0]) + ' <span class="info" title="' + esc(k[4]) + '" aria-label="' + esc(k[4]) + '">i</span></div>';
+            if (!p) return html + '<div class="value">' + esc(k[2](t[k[1]])) + '</div></div>';
+            var isRate = k[3] === 'rate' || k[3] === 'lower';
+            var c = t.visitors || p.visitors ? change(t[k[1]], p[k[1]], isRate ? 'rate' : null, k[3] === 'lower', 'None before') : { text: '', cls: '' };
+            return html + '<div class="values"><span class="value" title="' + esc(l.a) + '">' + esc(k[2](t[k[1]])) + '</span>' +
+                '<span class="value-cmp" title="' + esc(l.b) + '"><span class="sw-line cmp" aria-hidden="true"></span><span class="visually-hidden">' + esc(l.b) + ': </span>' + esc(k[2](p[k[1]])) + '</span></div>' +
+                '<div class="delta ' + c.cls + '">' + (c.text ? esc(c.text) : '&nbsp;') + '</div></div>';
+        }).join('');
+    }
+
+    // ---- Time-series chart: one series at a time, chosen by the metric tabs ----------
+    var METRICS = {
+        visitors: { label: 'Visitors', get: function (b) { return b.visitors; }, fmt: function (v) { return nf.format(v); } },
+        views: { label: 'Page views', get: function (b) { return b.views; }, fmt: function (v) { return nf.format(v); } },
+        enquiries: { label: 'Enquiries', get: function (b) { return b.enquiries; }, fmt: function (v) { return nf.format(v); } },
+        convRate: { label: 'Conversion rate', get: function (b) { return b.visitors ? b.converted / b.visitors : 0; }, fmt: function (v) { return pct(v); }, rate: true }
+    };
+
+    function bucketLabel(key, group, long) {
+        if (group === 'hour') return key + ':00';
+        if (group === 'month') return new Date(key + '-15T12:00:00Z').toLocaleDateString('en-GB', { month: long ? 'long' : 'short', year: long ? 'numeric' : '2-digit', timeZone: 'UTC' });
+        if (group === 'week') return (long ? 'Week of ' : '') + fmtDate(key, { day: 'numeric', month: 'short' });
+        return fmtDate(key, long ? { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' } : { day: 'numeric', month: 'short' });
+    }
+
+    function niceMax(v, rate) {
+        if (rate) return v <= 0 ? 0.05 : Math.min(1, Math.ceil(v / 0.05) * 0.05);
+        if (v <= 4) return 4;
+        var mag = Math.pow(10, Math.floor(Math.log10(v)));
+        var steps = [1, 2, 2.5, 5, 10];
+        for (var i = 0; i < steps.length; i++) if (steps[i] * mag >= v) return steps[i] * mag;
+        return 10 * mag;
+    }
+
+    // When comparing, the comparison period is drawn as a dashed grey line on the same
+    // axis, lined up bucket by bucket (day 1 against day 1), as Search Console does.
+    function renderChart() {
+        var d = state.data; if (!d) return;
+        var m = METRICS[state.metric];
+        Array.prototype.forEach.call($('metric-tabs').children, function (b) { b.setAttribute('aria-selected', String(b.dataset.metric === state.metric)); });
+        $('chart-title').textContent = m.label + ' by ' + d.group;
+
+        var series = d.series;
+        var vals = series.map(m.get);
+        var seriesB = d.compare ? d.compare.series : [];
+        var valsB = seriesB.map(m.get);
+        var box = $('chart');
+        var W = Math.max(280, box.clientWidth || 600), H = W < 500 ? 200 : 260;
+        var pad = { l: m.rate ? 44 : 36, r: 12, t: 12, b: 28 };
+        var iw = W - pad.l - pad.r, ih = H - pad.t - pad.b;
+        var max = niceMax(Math.max.apply(null, vals.concat(valsB, [0])), m.rate);
+        var n = Math.max(series.length, seriesB.length);
+        var x = function (i) { return pad.l + (n === 1 ? iw / 2 : (i * iw) / (n - 1)); };
+        var y = function (v) { return pad.t + ih - (v / max) * ih; };
+        var linePath = function (vs) { return vs.map(function (v, i) { return (i ? 'L' : 'M') + x(i).toFixed(1) + ' ' + y(v).toFixed(1); }).join(' '); };
+
+        var svg = '<svg viewBox="0 0 ' + W + ' ' + H + '" height="' + H + '" role="img" aria-label="' + esc(m.label + ' over the selected period' + (d.compare ? ', with the comparison period dashed' : '')) + '">';
+        // Grid and y labels: 4 recessive lines.
+        // Five gridlines when four would give fractional ticks (a max of 50 -> 0, 10 ... 50).
+        var ticks = !m.rate && max % 4 !== 0 && max % 5 === 0 ? 5 : 4;
+        svg += '<g class="axis">';
+        for (var g = 0; g <= ticks; g++) {
+            var gv = (max * g) / ticks, gy = y(gv);
+            svg += '<line x1="' + pad.l + '" x2="' + (W - pad.r) + '" y1="' + gy + '" y2="' + gy + '" stroke="' + (g === 0 ? '#D9D0C4' : '#F0EBE3') + '" stroke-width="1"/>';
+            svg += '<text x="' + (pad.l - 8) + '" y="' + (gy + 4) + '" text-anchor="end">' + esc(m.rate ? pct(gv, 0) : nf.format(Math.round(gv * 10) / 10)) + '</text>';
+        }
+        // X labels: at most ~8, evenly spaced, named after the selected period's buckets.
+        var every = Math.max(1, Math.ceil(n / Math.max(2, Math.floor(iw / 80))));
+        series.forEach(function (b, i) {
+            if (i % every !== 0 && i !== n - 1) return;
+            if (i === n - 1 && i % every !== 0 && (n - 1) % every < every / 2) return;
+            svg += '<text x="' + x(i) + '" y="' + (H - 8) + '" text-anchor="middle">' + esc(bucketLabel(b.key, d.group)) + '</text>';
+        });
+        svg += '</g>';
+
+        if (seriesB.length > 1) {
+            svg += '<path d="' + linePath(valsB) + '" fill="none" stroke="#6E6E68" stroke-width="2" stroke-dasharray="5 4" stroke-linejoin="round" stroke-linecap="round"/>';
+        }
+        if (series.length > 1) {
+            var line = linePath(vals);
+            var area = line + ' L' + x(series.length - 1).toFixed(1) + ' ' + y(0) + ' L' + x(0).toFixed(1) + ' ' + y(0) + ' Z';
+            svg += '<defs><linearGradient id="fill" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#2D5016" stop-opacity="0.18"/><stop offset="1" stop-color="#2D5016" stop-opacity="0.02"/></linearGradient></defs>';
+            svg += '<path d="' + area + '" fill="url(#fill)"/>';
+            svg += '<path d="' + line + '" fill="none" stroke="#2D5016" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>';
+        }
+        if (n <= 40) {
+            valsB.forEach(function (v, i) { svg += '<circle cx="' + x(i) + '" cy="' + y(v) + '" r="' + (n === 1 ? 5 : 3) + '" fill="#fff" stroke="#6E6E68" stroke-width="2"/>'; });
+            vals.forEach(function (v, i) { svg += '<circle cx="' + x(i) + '" cy="' + y(v) + '" r="' + (n === 1 ? 5 : 3) + '" fill="#2D5016" stroke="#fff" stroke-width="2"/>'; });
+        }
+        svg += '<line id="xhair" x1="0" x2="0" y1="' + pad.t + '" y2="' + (pad.t + ih) + '" stroke="#6E6E68" stroke-width="1" stroke-dasharray="3 3" visibility="hidden"/>';
+        svg += '<circle id="xdot-b" r="5" fill="#fff" stroke="#6E6E68" stroke-width="2" visibility="hidden"/>';
+        svg += '<circle id="xdot" r="5" fill="#2D5016" stroke="#fff" stroke-width="2" visibility="hidden"/>';
+        svg += '<rect id="hit" x="' + pad.l + '" y="0" width="' + iw + '" height="' + H + '" fill="transparent"/>';
+        svg += '</svg><div class="tooltip" id="tip" hidden></div>';
+        box.innerHTML = svg;
+
+        var hit = box.querySelector('#hit'), tip = box.querySelector('#tip'), xh = box.querySelector('#xhair'), xd = box.querySelector('#xdot'), xdb = box.querySelector('#xdot-b');
+        function dot(el, i, vs) {
+            if (i < vs.length) { el.setAttribute('cx', x(i)); el.setAttribute('cy', y(vs[i])); el.setAttribute('visibility', 'visible'); }
+            else el.setAttribute('visibility', 'hidden');
+        }
+        function show(evt) {
+            var rect = box.querySelector('svg').getBoundingClientRect();
+            var px = ((evt.clientX - rect.left) / rect.width) * W;
+            var i = n === 1 ? 0 : Math.max(0, Math.min(n - 1, Math.round(((px - pad.l) / iw) * (n - 1))));
+            var b = series[i], bb = seriesB[i];
+            xh.setAttribute('x1', x(i)); xh.setAttribute('x2', x(i)); xh.setAttribute('visibility', 'visible');
+            dot(xd, i, vals);
+            dot(xdb, i, valsB);
+            if (!d.compare) {
+                tip.innerHTML = '<div class="muted">' + esc(bucketLabel(b.key, d.group, true)) + '</div><strong>' + esc(m.fmt(vals[i])) + '</strong> ' + esc(m.label.toLowerCase()) +
+                    (state.metric !== 'visitors' ? '<div class="muted">' + nf.format(b.visitors) + ' visitors</div>' : '<div class="muted">' + nf.format(b.views) + ' page views · ' + nf.format(b.enquiries) + ' enquiries</div>');
+            } else {
+                var row = function (bk, v, cls) {
+                    return '<div class="tip-row"><span class="sw-line' + cls + '" aria-hidden="true"></span><span class="muted">' + esc(bucketLabel(bk.key, d.group, true)) + '</span> <strong>' + esc(m.fmt(v)) + '</strong></div>';
+                };
+                tip.innerHTML = '<div class="muted">' + esc(m.label) + '</div>' + (b ? row(b, vals[i], '') : '') + (bb ? row(bb, valsB[i], ' cmp') : '');
+            }
+            tip.hidden = false;
+            // Keep the whole tooltip inside the chart, so it can never widen the page on a phone.
+            var half = tip.offsetWidth / 2;
+            var left = (x(i) / W) * rect.width;
+            tip.style.left = Math.max(half, Math.min(rect.width - half, left)) + 'px';
+            tip.style.top = ((y(Math.max(i < vals.length ? vals[i] : 0, i < valsB.length ? valsB[i] : 0)) / H) * rect.height) + 'px';
+        }
+        function hide() { tip.hidden = true; xh.setAttribute('visibility', 'hidden'); xd.setAttribute('visibility', 'hidden'); xdb.setAttribute('visibility', 'hidden'); }
+        hit.addEventListener('pointermove', show);
+        hit.addEventListener('pointerdown', show);
+        hit.addEventListener('pointerleave', hide);
+
+        // Table view of the same numbers.
+        var head = esc(d.group.charAt(0).toUpperCase() + d.group.slice(1));
+        if (!d.compare) {
+            $('chart-table').innerHTML = '<table><thead><tr><th>' + head + '</th><th>Visitors</th><th>Page views</th><th>Enquiries</th><th>Conversion</th></tr></thead><tbody>' +
+                series.map(function (b) {
+                    return '<tr><td>' + esc(bucketLabel(b.key, d.group, true)) + '</td><td>' + nf.format(b.visitors) + '</td><td>' + nf.format(b.views) + '</td><td>' + nf.format(b.enquiries) + '</td><td>' + (b.visitors ? pct(b.converted / b.visitors) : '–') + '</td></tr>';
+                }).join('') + '</tbody></table>';
+            return;
+        }
+        var l = labels(d), pair = '<th scope="col"><span class="sw-line" aria-hidden="true"></span>' + esc(l.a) + '</th><th scope="col"><span class="sw-line cmp" aria-hidden="true"></span>' + esc(l.b) + '</th>';
+        var cell = function (bk, f) { return bk ? f(bk) : '–'; };
+        var html = '<table><thead><tr><th rowspan="2" scope="col">' + head + '</th><th colspan="2" class="grp" scope="colgroup">Visitors</th><th colspan="2" class="grp" scope="colgroup">Page views</th><th colspan="2" class="grp" scope="colgroup">Enquiries</th></tr><tr>' + pair + pair + pair + '</tr></thead><tbody>';
+        for (var i = 0; i < n; i++) {
+            var a = series[i], bb = seriesB[i];
+            html += '<tr><td>' + (a ? esc(bucketLabel(a.key, d.group, true)) : '') + (bb ? '<span class="path">vs ' + esc(bucketLabel(bb.key, d.group, true)) + '</span>' : '') + '</td>' +
+                ['visitors', 'views', 'enquiries'].map(function (k) {
+                    return '<td>' + cell(a, function (r) { return nf.format(r[k]); }) + '</td><td class="cmp-val">' + cell(bb, function (r) { return nf.format(r[k]); }) + '</td>';
+                }).join('') + '</tr>';
+        }
+        $('chart-table').innerHTML = html + '</tbody></table>';
+    }
+
+    var resizeTimer;
+    window.addEventListener('resize', function () { clearTimeout(resizeTimer); resizeTimer = setTimeout(renderChart, 120); });
+
+    // ---- Tables ------------------------------------------------------------------------
+    // rows: [{key,...}], cols: [[heading, fn(row) -> text]], opts: {filterKey, name(row)}
+    function table(rows, cols, opts) {
+        if (!rows.length) return '<p class="empty">Nothing recorded for this period.</p>';
+        var max = Math.max.apply(null, rows.map(function (r) { return r.visitors || r.views || r.count || 0; })) || 1;
+        var html = '<table><thead><tr>' + cols.map(function (c) { return '<th scope="col">' + esc(c[0]) + '</th>'; }).join('') + '</tr></thead><tbody>';
+        rows.forEach(function (r) {
+            var active = opts.filterKey && state.filter[opts.filterKey] === r.key;
+            html += '<tr' + (opts.filterKey ? ' class="clickable" tabindex="0" data-fkey="' + esc(opts.filterKey) + '" data-fval="' + esc(r.key) + '"' + (active ? ' aria-current="true"' : '') + '>' : '>');
+            cols.forEach(function (c, i) {
+                if (i === 0) {
+                    var bar = ((r.visitors || r.views || r.count || 0) / max) * 100;
+                    html += '<td>' + (opts.page ? pageCell(r.key, bar) : '<span class="name">' + esc(c[1](r)) + '</span><span class="bar" style="width:' + Math.max(1, bar) + '%"></span>') + '</td>';
+                } else {
+                    html += '<td>' + esc(c[1](r)) + '</td>';
+                }
+            });
+            html += '</tr>';
+        });
+        return html + '</tbody></table>';
+    }
+
+    // The same table when comparing: each metric gets a column per period and the first
+    // metric a Change column too. Rows are the selected period's, then any seen only in
+    // the comparison period.
+    function cmpTable(rowsA, rowsB, first, metrics, opts, limit) {
+        var byB = {}, seen = {};
+        rowsB.forEach(function (r) { byB[r.key] = r; });
+        var rows = rowsA.map(function (r) { seen[r.key] = 1; return { key: r.key, a: r, b: byB[r.key] }; });
+        rowsB.forEach(function (r) { if (!seen[r.key]) rows.push({ key: r.key, a: null, b: r }); });
+        rows = rows.slice(0, limit);
+        if (!rows.length) return '<p class="empty">Nothing recorded in either period.</p>';
+        var l = labels(state.data);
+        var max = Math.max.apply(null, rows.map(function (r) { return r.a ? metrics[0].get(r.a) : 0; })) || 1;
+        var html = '<table><thead><tr><th rowspan="2" scope="col">' + esc(first) + '</th>' +
+            metrics.map(function (mt, i) { return '<th colspan="' + (i ? 2 : 3) + '" class="grp" scope="colgroup">' + esc(mt.head) + '</th>'; }).join('') + '</tr><tr>' +
+            metrics.map(function (mt, i) {
+                return '<th scope="col"><span class="sw-line" aria-hidden="true"></span>' + esc(l.a) + '</th><th scope="col"><span class="sw-line cmp" aria-hidden="true"></span>' + esc(l.b) + '</th>' +
+                    (i ? '' : '<th scope="col">Change</th>');
+            }).join('') + '</tr></thead><tbody>';
+        rows.forEach(function (r) {
+            var active = opts.filterKey && state.filter[opts.filterKey] === r.key;
+            html += '<tr' + (opts.filterKey ? ' class="clickable" tabindex="0" data-fkey="' + esc(opts.filterKey) + '" data-fval="' + esc(r.key) + '"' + (active ? ' aria-current="true"' : '') + '>' : '>');
+            var bar = r.a ? (metrics[0].get(r.a) / max) * 100 : 0;
+            html += '<td>' + (opts.page ? pageCell(r.key, bar) : '<span class="name">' + esc(r.key) + '</span><span class="bar" style="width:' + Math.max(1, bar) + '%"></span>') + '</td>';
+            metrics.forEach(function (mt, i) {
+                var va = r.a ? mt.get(r.a) : mt.zero, vb = r.b ? mt.get(r.b) : mt.zero;
+                html += '<td>' + esc(mt.fmt(va)) + '</td><td class="cmp-val">' + esc(mt.fmt(vb)) + '</td>';
+                if (!i) {
+                    var c = change(va, vb, mt.rate ? 'rate' : null, false, 'New');
+                    html += '<td class="chg ' + c.cls + '">' + esc(c.text) + '</td>';
+                }
+            });
+            html += '</tr>';
+        });
+        return html + '</tbody></table>';
+    }
+    var count = function (v) { return nf.format(v); };
+    var M_VISITORS = { head: 'Visitors', get: function (r) { return r.visitors; }, fmt: count, zero: 0 };
+    var M_VIEWS = { head: 'Views', get: function (r) { return r.views; }, fmt: count, zero: 0 };
+    var M_ENQ_RATE = { head: 'Enquiry rate', get: function (r) { return r.visitors ? r.converted / r.visitors : null; }, fmt: function (v) { return v == null ? '–' : pct(v); }, zero: null, rate: true };
+
+    function bindRows(container) {
+        container.querySelectorAll('tr.clickable').forEach(function (tr) {
+            var go = function () { setFilter(tr.dataset.fkey, tr.dataset.fval); };
+            tr.addEventListener('click', go);
+            tr.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); } });
+        });
+    }
+
+    var rate = function (num, den) { return den ? pct(num / den) : '–'; };
+    var stdCols = function (first) {
+        return [
+            [first, function (r) { return r.key; }],
+            ['Visitors', function (r) { return nf.format(r.visitors); }],
+            ['Bounce', function (r) { return rate(r.bounces, r.visitors); }],
+            ['Enquiry rate', function (r) { return rate(r.converted, r.visitors); }]
+        ];
+    };
+
+    function renderPages(d) {
+        var rows = state.pagesAll ? d.pages : d.pages.slice(0, 15);
+        var el = $('pages');
+        el.innerHTML = (d.compare ? cmpTable(d.pages, d.compare.pages, 'Page', [M_VIEWS, M_VISITORS], { filterKey: 'page', page: true }, state.pagesAll ? 1000 : 15) : table(rows, [
+            ['Page', function (r) { return r.key; }],
+            ['Views', function (r) { return nf.format(r.views); }],
+            ['Visitors', function (r) { return nf.format(r.visitors); }],
+            ['Avg time', function (r) { return r.time ? duration(r.avgTime) : '–'; }],
+            ['Landed here', function (r) { return nf.format(r.entries); }],
+            ['Enquiry rate', function (r) { return rate(r.converted, r.visitors); }]
+        ], { filterKey: 'page', page: true })) +
+            (d.pages.length > 15 ? '<button type="button" class="link-btn more-btn" id="pages-more">' + (state.pagesAll ? 'Show fewer' : 'Show all ' + d.pages.length + ' pages') + '</button>' : '');
+        bindRows(el);
+        var more = $('pages-more');
+        if (more) more.addEventListener('click', function () { state.pagesAll = !state.pagesAll; renderPages(d); });
+    }
+
+    function renderSources(d) {
+        var tab = state.tabs.sources, el = $('sources');
+        var heads = { sources: 'Source', channels: 'Type', campaigns: 'Campaign' };
+        var keys = { sources: 'source', channels: 'channel', campaigns: null };
+        el.innerHTML = (d.compare ? cmpTable(d[tab], d.compare[tab], heads[tab], [M_VISITORS, M_ENQ_RATE], { filterKey: keys[tab] }, 20)
+            : table(d[tab].slice(0, 20), stdCols(heads[tab]), { filterKey: keys[tab] })) +
+            (tab === 'campaigns' && !d.campaigns.length ? '<p class="hint" style="margin:0">Campaigns appear when a link carries utm_campaign, e.g. ?utm_source=instagram&amp;utm_campaign=bio-link</p>' : '');
+        bindRows(el);
+    }
+
+    function renderEntries(d) {
+        var el = $('entries');
+        el.innerHTML = d.compare ? cmpTable(d.entries, d.compare.entries, 'Page', [M_VISITORS, M_ENQ_RATE], { filterKey: 'page', page: true }, 15)
+            : table(d.entries.slice(0, 15), stdCols('Page'), { filterKey: 'page', page: true });
+        bindRows(el);
+    }
+
+    function renderLocations(d) {
+        var tab = state.tabs.locations, el = $('locations');
+        var head = tab === 'cities' ? 'Town' : 'Country', fkey = tab === 'cities' ? 'city' : 'country';
+        el.innerHTML = d.compare ? cmpTable(d[tab], d.compare[tab], head, [M_VISITORS, M_ENQ_RATE], { filterKey: fkey }, 20)
+            : table(d[tab].slice(0, 20), stdCols(head), { filterKey: fkey });
+        bindRows(el);
+    }
+
+    function renderDevices(d) {
+        var tab = state.tabs.devices, el = $('devices');
+        var heads = { devices: 'Device', browsers: 'Browser', oses: 'System' };
+        el.innerHTML = d.compare ? cmpTable(d[tab], d.compare[tab], heads[tab], [M_VISITORS, M_ENQ_RATE], { filterKey: tab === 'devices' ? 'device' : null }, 15)
+            : table(d[tab].slice(0, 15), stdCols(heads[tab]), { filterKey: tab === 'devices' ? 'device' : null });
+        bindRows(el);
+    }
+
+    var CLICK_NAMES = { phone: 'Phone number', email: 'Email address', whatsapp: 'WhatsApp', instagram: 'Instagram', facebook: 'Facebook', youtube: 'YouTube', tiktok: 'TikTok' };
+    function renderConversions(d) {
+        var t = d.totals, p = d.compare && d.compare.totals, l = p ? labels(d) : null;
+        // When comparing, the comparison figure follows in grey: "5 · vs 3".
+        var vs = function (text) { return p ? ' <span class="cmp-val">· vs <span class="visually-hidden">' + esc(l.b) + ' </span>' + esc(text) + '</span>' : ''; };
+        var withRate = function (n, r) { return nf.format(n) + ' (' + pct(r) + ')'; };
+        var html = '<ul class="list-simple">' +
+            '<li><span>Enquiries sent</span><strong>' + nf.format(t.enquiries) + vs(p ? nf.format(p.enquiries) : '') + '</strong></li>' +
+            '<li><span>Visitors who sent an enquiry</span><strong>' + withRate(t.converted, t.conversionRate) + vs(p ? withRate(p.converted, p.conversionRate) : '') + '</strong></li>' +
+            '<li><span>Visitors who enquired or tapped call / email / WhatsApp</span><strong>' + withRate(t.contacted, t.contactRate) + vs(p ? withRate(p.contacted, p.contactRate) : '') + '</strong></li></ul>';
+        // Counts by key, with keys seen only in the comparison period listed after.
+        var counts = function (a, b, name) {
+            var byB = {}, seen = {}, rows = [];
+            (b || []).forEach(function (r) { byB[r.key] = r.count; });
+            a.forEach(function (r) { seen[r.key] = 1; rows.push([r.key, r.count, byB[r.key] || 0]); });
+            (b || []).forEach(function (r) { if (!seen[r.key]) rows.push([r.key, 0, r.count]); });
+            return rows.length ? '<ul class="list-simple">' + rows.map(function (r) {
+                return '<li><span>' + esc(name(r[0])) + '</span><strong>' + nf.format(r[1]) + vs(nf.format(r[2])) + '</strong></li>';
+            }).join('') + '</ul>' : null;
+        };
+        html += '<div class="sub-h">Enquiries by event type</div>';
+        html += counts(d.enquiryTypes, p && d.compare.enquiryTypes, function (k) { return k || 'Not given'; }) ||
+            '<p class="empty" style="text-align:left">No enquiries in this period.</p>';
+        html += '<div class="sub-h">Link taps</div>';
+        html += counts(d.clicks, p && d.compare.clicks, function (k) { return CLICK_NAMES[k] || k; }) ||
+            '<p class="empty" style="text-align:left">No taps on contact or social links in this period.</p>';
+        $('conversions').innerHTML = html;
+    }
+
+    function renderHeatmap(hm) {
+        var max = 0;
+        hm.forEach(function (row) { row.forEach(function (v) { if (v > max) max = v; }); });
+        var days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+        var html = '<div class="heat" role="img" aria-label="Visitors by weekday and hour"><span></span>';
+        for (var h = 0; h < 24; h++) html += '<span class="hourlabel">' + (h % 3 === 0 ? h : '') + '</span>';
+        hm.forEach(function (row, di) {
+            html += '<span class="rowlabel">' + days[di] + '</span>';
+            row.forEach(function (v, h) {
+                var a = v ? 0.15 + 0.85 * (v / max) : 0;
+                html += '<span class="cell" title="' + days[di] + ' ' + String(h).padStart(2, '0') + ':00 – ' + v + ' visitor' + (v === 1 ? '' : 's') + '"' +
+                    (v ? ' style="background:rgba(45,80,22,' + a.toFixed(2) + ')"' : '') + '></span>';
+            });
+        });
+        html += '</div><div class="heat-legend">Fewer <span class="sw" style="background:rgba(45,80,22,.15)"></span><span class="sw" style="background:rgba(45,80,22,.5)"></span><span class="sw" style="background:rgba(45,80,22,1)"></span> More' +
+            (max ? ' <span style="margin-left:auto">Busiest hour: ' + max + ' visitor' + (max === 1 ? '' : 's') + '</span>' : '') + '</div>';
+        $('heatmap').innerHTML = html;
+    }
+
+    function renderJourneys(list) {
+        if (!list.length) { $('journeys').innerHTML = '<p class="empty">No enquiries in this period yet.</p>'; return; }
+        $('journeys').innerHTML = list.map(function (j) {
+            var when = new Date(j.at).toLocaleString('en-GB', { timeZone: 'Europe/London', weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+            var steps = (j.path || []).map(function (p) { return '<span class="step" title="' + esc(p) + '">' + esc(pageName(p)) + '</span>'; });
+            steps.push('<span class="step goal">Enquiry sent</span>');
+            return '<div class="journey"><div class="journey-meta"><strong>' + esc(when) + '</strong><span>From ' + esc(j.src || 'Direct') + '</span><span>' + esc(j.dev) + '</span>' +
+                (j.place ? '<span>' + esc(j.place) + '</span>' : '') + (j.types && j.types.length ? '<span>' + esc(j.types.join(', ')) + '</span>' : '') +
+                '<span>' + nf.format(j.views) + ' page' + (j.views === 1 ? '' : 's') + ', ' + duration(j.time) + '</span></div>' +
+                '<div class="steps">' + steps.join('<span class="arrow" aria-hidden="true">→</span>') + '</div></div>';
+        }).join('');
+    }
+
+    // ---- Start -------------------------------------------------------------------------
+    if (getToken()) {
+        $('app').hidden = false;
+        load();
+    } else {
+        showLogin('');
+    }
+})();
+</script>
+</body>
+</html>
