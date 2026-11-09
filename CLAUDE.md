@@ -82,7 +82,9 @@ Per the CSS spec, those properties turn the element into a new containing block 
 ## Local Development
 **Files use root-relative paths — they MUST be served from a local server, not opened directly.**
 
-**VS Code Live Server** or `python -m http.server 8080` → http://localhost:8080
+**VS Code Live Server** or `python -m http.server 8080` → http://localhost:8080 (`python3` on the Mac)
+
+**Working from the Mac (`~/Downloads/SBW`, since 2026-11-09):** git and Python 3 work (Apple's command line tools were installed that day); Node and `gh` are not installed, so the stats tests and the CRM script (`crm.mjs`, which lives on the Windows machine) cannot run here. Five `admin/*.html` files and `js/contact-form.js` show as modified only because of CRLF/LF line endings, so stage files by name and leave those out unless they really changed.
 
 ### Environment Variables
 Set in Netlify → Project configuration → Environment variables (never committed):
@@ -386,6 +388,8 @@ Open questions for the client: (a) which town/city they're actually based in —
 - **Private files:** because the repo root is the publish dir, `netlify.toml` 404s `/netlify/*`, `/CLAUDE.md`, `/fix_encoding.py` and the PRD/old-CLAUDE docs. Add a rule if you commit other internal files at the root.
 - **Décor/Catering is a single checkbox + dropdown** (`#cb-decor-catering` → reveals `#decor-catering-package-section` with a "Food & Décor" / "Décor Only" select, `name="decor_catering_package"`) — added 2026-07-23 because catering is never sold as a stand-alone service. Event Planning and Event Management remain separate checkboxes. The dropdown value drives which of `#decor-section` / `#catering-section` show, mirroring the old separate-checkbox behaviour.
 - **General fields added 2026-07-23**: `venue_location` (free text, always visible, next to Event Type), `number_of_events` (select 1/2/3/4+, for people enquiring about multiple functions), `menu_preference` (optional Menu 1/Menu 2 select inside the catering sub-section, distinct from the existing Buffet/Table Service `menu_type` radio), `budget` (free text, placed near the end of the form before Additional Notes).
+- **Event Type wedding options (split 2026-11-09, client request):** "Wedding" (`wedding-only`), "Walimah" (`walimah`) and "Wedding & Walimah (Joint Event)" (`wedding`). The joint option deliberately keeps the old `wedding` value so enquiries saved before the split still read correctly; do not reuse `wedding` for the wedding-only option. Labels live in `contact.html`, `LABELS` in `submission-created.js` and `ENQUIRY_LABELS` in `admin.js`, and must stay in sync. The `/dashboard` enquiry counts use the option's visible text, so pre-split enquiries appear there under the old "Wedding & Walimah" name.
+- **Thank-you message (changed 2026-11-09, client request):** says "We'll be back with you as soon as we can." Do not promise a reply time such as "within 24 hours".
 - **Guest Count** (`#guest-count`, `name="guest_count"`): required (was optional and labelled "Approximate Guest Count" until 2026-07-23) — now just "Guest Count" with the `required` attribute, and moved to sit directly after Venue/Location & Number of Events and before the Services Required section (was previously after Venue Details, near the end of the form).
 - **Supabase `enquiries` table**: the columns above (`venue_location`, `number_of_events`, `menu_preference`, `budget`, `service_decor_catering`, `decor_catering_package`) are written by `contact-form.js` — **all added to the Supabase table (confirmed 2026-11-02)**, along with `archived boolean not null default false`.
 
