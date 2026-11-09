@@ -985,7 +985,8 @@
   var ENQUIRY_LABELS = {
     event_type: {
       engagement: 'Engagement', nikkah: 'Nikkah', mehndi: 'Mehndi',
-      wedding: 'Wedding & Walimah', corporate: 'Corporate', other: 'Other'
+      'wedding-only': 'Wedding', walimah: 'Walimah',
+      wedding: 'Wedding & Walimah (Joint Event)', corporate: 'Corporate', other: 'Other'
     },
     decor_catering_package: { 'food-decor': 'Food & Décor', 'decor-only': 'Décor Only' },
     menu_type: { buffet: 'Buffet', 'table-service': 'Table Service' },

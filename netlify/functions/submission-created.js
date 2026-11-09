@@ -53,7 +53,10 @@ const LABELS = {
     engagement: 'Engagement',
     nikkah: 'Nikkah',
     mehndi: 'Mehndi',
-    wedding: 'Wedding & Walimah',
+    'wedding-only': 'Wedding',
+    walimah: 'Walimah',
+    // Keeps the old value so enquiries saved before the split still read correctly
+    wedding: 'Wedding & Walimah (Joint Event)',
     corporate: 'Corporate',
     other: 'Other'
   },

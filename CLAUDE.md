@@ -22,7 +22,7 @@ SBW Events website for sbwevents.co.uk. Family-run weddings and events business 
 ---
 
 ## Commercial terms (recorded 2026-11-07, from Jayden)
-- **Build price £260.** £130 deposit **paid**; the £130 balance is **still awaited** (a CRM follow-up is set for Fri 13 Nov 2026 to check it). Payment reminder with the link sent by WhatsApp on 9 Nov, with no mention of taking the site down (Leo).
+- **Build price £260.** £130 deposit **paid**; the £130 balance was **paid on 9 Nov 2026** (confirmed by Jayden), so the build is fully paid. The CRM follow-up set for Fri 13 Nov 2026 to check it is no longer needed.
 - **£48/year** after the first 12 months.
 - **Jayden has told the client that a full page refresh costs £15.** Quote that figure for any refresh request, and never a different one without asking Jayden first.
 
